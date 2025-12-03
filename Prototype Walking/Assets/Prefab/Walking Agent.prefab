@@ -336,14 +336,14 @@ HingeJoint2D:
   m_Anchor: {x: 0.000000007408005, y: 0.6199999}
   m_ConnectedAnchor: {x: 0.000000007408005, y: -0.44000018}
   m_UseConnectedAnchor: 1
-  m_UseMotor: 0
+  m_UseMotor: 1
   m_Motor:
     m_MotorSpeed: 0
     m_MaximumMotorForce: 10000
-  m_UseLimits: 0
+  m_UseLimits: 1
   m_AngleLimits:
     m_LowerAngle: 0
-    m_UpperAngle: 359
+    m_UpperAngle: 180
 --- !u!1 &3526257874428889101
 GameObject:
   m_ObjectHideFlags: 0
@@ -558,14 +558,14 @@ HingeJoint2D:
   m_Anchor: {x: 0, y: 0.7}
   m_ConnectedAnchor: {x: 0.229, y: -0.30499998}
   m_UseConnectedAnchor: 1
-  m_UseMotor: 0
+  m_UseMotor: 1
   m_Motor:
     m_MotorSpeed: 0
     m_MaximumMotorForce: 10000
-  m_UseLimits: 0
+  m_UseLimits: 1
   m_AngleLimits:
     m_LowerAngle: 0
-    m_UpperAngle: 359
+    m_UpperAngle: 180
 --- !u!1 &3987670709041790612
 GameObject:
   m_ObjectHideFlags: 0
@@ -988,14 +988,14 @@ HingeJoint2D:
   m_Anchor: {x: -0.00000014901161, y: 0.59000015}
   m_ConnectedAnchor: {x: -0.000000029802322, y: -0.43999982}
   m_UseConnectedAnchor: 1
-  m_UseMotor: 0
+  m_UseMotor: 1
   m_Motor:
     m_MotorSpeed: 0
     m_MaximumMotorForce: 10000
-  m_UseLimits: 0
+  m_UseLimits: 1
   m_AngleLimits:
     m_LowerAngle: 0
-    m_UpperAngle: 359
+    m_UpperAngle: 180
 --- !u!1 &7579564936655058451
 GameObject:
   m_ObjectHideFlags: 0
@@ -1264,11 +1264,11 @@ HingeJoint2D:
   m_Anchor: {x: 0, y: 0.7}
   m_ConnectedAnchor: {x: -0.25, y: -0.295}
   m_UseConnectedAnchor: 1
-  m_UseMotor: 0
+  m_UseMotor: 1
   m_Motor:
     m_MotorSpeed: 0
     m_MaximumMotorForce: 10000
-  m_UseLimits: 0
+  m_UseLimits: 1
   m_AngleLimits:
     m_LowerAngle: 0
-    m_UpperAngle: 359
+    m_UpperAngle: 180
