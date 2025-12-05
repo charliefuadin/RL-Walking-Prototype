@@ -20,8 +20,6 @@ public class WalkBehaviour : Agent
 
     [HideInInspector] public int currentEpisode = 0;
     [HideInInspector] public float cumalitiveReward = 0f;
-
-
     public override void Initialize()
     {
         Debug.Log("Initialized");
@@ -29,6 +27,7 @@ public class WalkBehaviour : Agent
         currentEpisode = 0;
         cumalitiveReward = 0;
     }
+
     public override void OnEpisodeBegin()
     {
 
@@ -39,6 +38,7 @@ public class WalkBehaviour : Agent
         ResetScene();
         
     }
+
     private void ResetScene()
     {
         transform.localPosition = new Vector2(-20, -7.5f);
@@ -55,8 +55,8 @@ public class WalkBehaviour : Agent
             motor.motorSpeed = 0;
             joint.motor = motor;
         }
-
     }
+
     public override void CollectObservations(VectorSensor sensor)
     {
         //Rotation & Position of overall Agent
@@ -74,7 +74,6 @@ public class WalkBehaviour : Agent
         sensor.AddObservation(positionNormalizedX);
         sensor.AddObservation(positionNormalizedY);
         sensor.AddObservation(rotationNormalized);
-
     }
 
     public override void OnActionReceived(ActionBuffers actions)
@@ -83,7 +82,6 @@ public class WalkBehaviour : Agent
         shouldMove = true; 
         ChooseReward();
         cumalitiveReward = GetCumulativeReward();
-
     }
 
     private void ChooseReward()
@@ -117,6 +115,7 @@ public class WalkBehaviour : Agent
     private void MoveAgent(ActionSegment<int> act)
     {
         //Afterwards try the continuos actions set up instead of discrete
+
         int actionIndex = 0;
         lastPositionX = transform.localPosition.x;
         foreach (HingeJoint2D joint in limbJoints)
@@ -151,7 +150,6 @@ public class WalkBehaviour : Agent
             shouldMove = false; //reset the flag after its use
         }
     }
-
 
     public void GoalReached()
     {
