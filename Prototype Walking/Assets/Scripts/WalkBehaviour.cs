@@ -5,6 +5,9 @@ using Unity.MLAgents.Sensors;
 using Unity.VisualScripting;
 public class WalkBehaviour : Agent
 {
+    [SerializeField] private SpriteRenderer walkSprite;
+    private Color normalColor;
+
     [SerializeField] HingeJoint2D[] limbJoints;
     [SerializeField] Transform[] limbs;
     [SerializeField] private float motorSpeed;
@@ -21,7 +24,7 @@ public class WalkBehaviour : Agent
     public override void Initialize()
     {
         Debug.Log("Initialized");
-
+        normalColor = walkSprite.color;
         currentEpisode = 0;
         cumalitiveReward = 0;
     }
@@ -38,6 +41,17 @@ public class WalkBehaviour : Agent
     {
         transform.localPosition = new Vector2(-20, -7.5f);
         transform.localRotation = Quaternion.identity;
+        foreach (Transform transform in limbs)
+        {
+            transform.localRotation = Quaternion.identity;
+        }
+        foreach (HingeJoint2D joint in limbJoints)
+        {
+            JointMotor2D motor = joint.motor;
+            motor.motorSpeed = 0;
+            joint.motor = motor;
+        }
+
     }
     public override void CollectObservations(VectorSensor sensor)
     {
@@ -62,7 +76,7 @@ public class WalkBehaviour : Agent
     public override void OnActionReceived(ActionBuffers actions)
     {
         currentActions = actions.DiscreteActions;
-        shouldMove = true;
+        shouldMove = true; 
         ChooseReward();
         cumalitiveReward = GetCumulativeReward();
 
@@ -70,6 +84,9 @@ public class WalkBehaviour : Agent
 
     private void ChooseReward()
     {
+        //I should do some better Reward shaping 
+        //Like for smooth walking or reaching certain positions
+
         //Makesure to get to the goal Quickly
         AddReward(-1f / MaxStep);
 
@@ -84,24 +101,30 @@ public class WalkBehaviour : Agent
             AddReward(-0.01f);
         }
 
-
         //Makes Sure agent stays a certain height to insure good walkiong
         if (transform.localPosition.y < -8.3f)
         {
             AddReward(-0.01f);
+            walkSprite.color = Color.red;
+        }
+        else
+        {
+            walkSprite.color = normalColor;
         }
 
     }
 
+    //Called in FixedUpdate for physics changes
     private void MoveAgent(ActionSegment<int> act)
     {
+        int actionIndex = 0;
         lastPositionX = transform.localPosition.x;
-        var action = act[0];
+        var action = act[actionIndex];
         foreach (HingeJoint2D joint in limbJoints)
         {
             JointMotor2D motor = joint.motor;
             motor.maxMotorTorque = maxMotorForce;
-            joint.motor = motor;
+
             switch (action)
             {
                 case 1:
@@ -114,6 +137,8 @@ public class WalkBehaviour : Agent
                     motor.motorSpeed = 0;
                     break; ;
             }
+            joint.motor = motor;
+            actionIndex++;
 
         }
 
