@@ -119,23 +119,23 @@ public class WalkBehaviour : Agent
     {
         int actionIndex = 0;
         lastPositionX = transform.localPosition.x;
-        var action = act[actionIndex];
         foreach (HingeJoint2D joint in limbJoints)
         {
             JointMotor2D motor = joint.motor;
             motor.maxMotorTorque = maxMotorForce;
-
+            var action = act[actionIndex];
             switch (action)
             {
+                case 0:
+                    motor.motorSpeed = 0;
+                    break; ;
                 case 1:
                     motor.motorSpeed = motorSpeed;
                     break;
                 case 2:
                     motor.motorSpeed = -motorSpeed;
                     break;
-                case 3:
-                    motor.motorSpeed = 0;
-                    break; ;
+                
             }
             joint.motor = motor;
             actionIndex++;
