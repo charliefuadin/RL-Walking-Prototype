@@ -1,8 +1,9 @@
-using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using Unity.VisualScripting;
+using UnityEngine;
+using UnityEngine.U2D.IK;
 public class WalkBehaviour : Agent
 {
     [SerializeField] private SpriteRenderer walkSprite;
@@ -30,7 +31,8 @@ public class WalkBehaviour : Agent
     }
     public override void OnEpisodeBegin()
     {
-        Debug.Log("EpisodeBegin");
+
+        Debug.Log("EpisodeBegin" + currentEpisode);
         currentEpisode++;
         cumalitiveReward = 0f;
 
@@ -41,9 +43,11 @@ public class WalkBehaviour : Agent
     {
         transform.localPosition = new Vector2(-20, -7.5f);
         transform.localRotation = Quaternion.identity;
-        foreach (Transform transform in limbs)
+        foreach (Transform limb in limbs)
         {
-            transform.localRotation = Quaternion.identity;
+            Vector3 eulerAngles = limb.localEulerAngles;
+            eulerAngles.z = 0f;
+            limb.localEulerAngles = eulerAngles;
         }
         foreach (HingeJoint2D joint in limbJoints)
         {
@@ -90,19 +94,14 @@ public class WalkBehaviour : Agent
         //Makesure to get to the goal Quickly
         AddReward(-1f / MaxStep);
 
-        //Adds Reward if Agent made any distance
         float currentPositionX = transform.localPosition.x;
-        if (currentPositionX < lastPositionX)
-        {
-            AddReward(0.01f);
-        }
-        else
+        if (currentPositionX > lastPositionX)
         {
             AddReward(-0.01f);
         }
 
         //Makes Sure agent stays a certain height to insure good walkiong
-        if (transform.localPosition.y < -8.3f)
+        if (transform.localPosition.y < -8.2f)
         {
             AddReward(-0.01f);
             walkSprite.color = Color.red;
@@ -117,6 +116,7 @@ public class WalkBehaviour : Agent
     //Called in FixedUpdate for physics changes
     private void MoveAgent(ActionSegment<int> act)
     {
+        //Afterwards try the continuos actions set up instead of discrete
         int actionIndex = 0;
         lastPositionX = transform.localPosition.x;
         foreach (HingeJoint2D joint in limbJoints)
@@ -126,20 +126,19 @@ public class WalkBehaviour : Agent
             var action = act[actionIndex];
             switch (action)
             {
-                case 0:
-                    motor.motorSpeed = 0;
-                    break; ;
-                case 1:
+                case 2:
                     motor.motorSpeed = motorSpeed;
                     break;
-                case 2:
+                case 1:
                     motor.motorSpeed = -motorSpeed;
                     break;
-                
+                case 3:
+                    motor.motorSpeed = 0;
+                    break; ;
+
             }
             joint.motor = motor;
             actionIndex++;
-
         }
 
     }
@@ -167,6 +166,33 @@ public class WalkBehaviour : Agent
         if (collision.gameObject.CompareTag("Goal"))
         {
             GoalReached();
+        }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Wall"))
+        {
+            AddReward(-0.1f);
+            if (walkSprite != null)
+            {
+                walkSprite.color = Color.red;
+            }
+        }
+    }
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Wall"))
+        {
+            AddReward(-0.025f * Time.fixedDeltaTime);
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (walkSprite != null)
+        {
+            walkSprite.color = normalColor;
         }
     }
 }
