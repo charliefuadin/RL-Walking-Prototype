@@ -36,7 +36,6 @@ public class WalkBehaviour : Agent
         cumalitiveReward = 0f;
 
         ResetScene();
-        
     }
 
     private void ResetScene()
@@ -93,13 +92,13 @@ public class WalkBehaviour : Agent
         AddReward(-1f / MaxStep);
 
         float currentPositionX = transform.localPosition.x;
-        if (currentPositionX > lastPositionX)
+        if (currentPositionX < lastPositionX)
         {
             AddReward(-0.01f);
         }
 
         //Makes Sure agent stays a certain height to insure good walkiong
-        if (transform.localPosition.y < -8.2f)
+        if (transform.localPosition.y < -8.25f)
         {
             AddReward(-0.01f);
             walkSprite.color = Color.red;

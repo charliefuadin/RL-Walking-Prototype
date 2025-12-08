@@ -1,0 +1,56 @@
+{
+    "Walking": {
+        "checkpoints": [
+            {
+                "steps": 499993,
+                "file_path": "results\\walk3\\Walking\\Walking-499993.onnx",
+                "reward": 4.484546164306355,
+                "creation_time": 1765147025.2113676,
+                "auxillary_file_paths": [
+                    "results\\walk3\\Walking\\Walking-499993.pt"
+                ]
+            },
+            {
+                "steps": 999974,
+                "file_path": "results\\walk3\\Walking\\Walking-999974.onnx",
+                "reward": 4.886879054017556,
+                "creation_time": 1765147811.3670192,
+                "auxillary_file_paths": [
+                    "results\\walk3\\Walking\\Walking-999974.pt"
+                ]
+            },
+            {
+                "steps": 1499969,
+                "file_path": "results\\walk3\\Walking\\Walking-1499969.onnx",
+                "reward": 4.8880203648337295,
+                "creation_time": 1765148601.165334,
+                "auxillary_file_paths": [
+                    "results\\walk3\\Walking\\Walking-1499969.pt"
+                ]
+            },
+            {
+                "steps": 1500033,
+                "file_path": "results\\walk3\\Walking\\Walking-1500033.onnx",
+                "reward": 4.8880203648337295,
+                "creation_time": 1765148601.2512743,
+                "auxillary_file_paths": [
+                    "results\\walk3\\Walking\\Walking-1500033.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 1500033,
+            "file_path": "results\\walk3\\Walking.onnx",
+            "reward": 4.8880203648337295,
+            "creation_time": 1765148601.2512743,
+            "auxillary_file_paths": [
+                "results\\walk3\\Walking\\Walking-1500033.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.2.0.dev0",
+        "torch_version": "2.2.2+cu121"
+    }
+}
