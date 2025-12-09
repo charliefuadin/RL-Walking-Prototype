@@ -1,3 +1,4 @@
+using Unity.InferenceEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
@@ -11,10 +12,12 @@ public class WalkBehaviour : Agent
 
     [SerializeField] HingeJoint2D[] limbJoints;
     [SerializeField] Transform[] limbs;
-    [SerializeField] private float motorSpeed;
-    [SerializeField] private float maxMotorForce;
+    [SerializeField] Collider2D[] legs;
 
-    private ActionSegment<int> currentActions;
+    [SerializeField] private float MOTORSPEED = 100;
+    [SerializeField] private float MOTORFORCE = 100;
+
+    private ActionBuffers currentActions;
     private float lastPositionX;
     private bool shouldMove = false;
 
@@ -26,6 +29,19 @@ public class WalkBehaviour : Agent
         normalColor = walkSprite.color;
         currentEpisode = 0;
         cumalitiveReward = 0;
+        foreach (var leg in GameObject.FindGameObjectsWithTag("Leg"))
+        {
+            if (leg.gameObject.CompareTag("Leg"))
+            {
+                leg.layer = LayerMask.NameToLayer("Legs");
+            }
+        }
+        Physics2D.IgnoreLayerCollision
+        (
+        LayerMask.NameToLayer("Legs"),
+        LayerMask.NameToLayer("Legs"),
+        true
+        );
     }
 
     public override void OnEpisodeBegin()
@@ -77,7 +93,8 @@ public class WalkBehaviour : Agent
 
     public override void OnActionReceived(ActionBuffers actions)
     {
-        currentActions = actions.DiscreteActions;
+
+        currentActions = actions;
         shouldMove = true; 
         ChooseReward();
         cumalitiveReward = GetCumulativeReward();
@@ -98,7 +115,7 @@ public class WalkBehaviour : Agent
         }
 
         //Makes Sure agent stays a certain height to insure good walkiong
-        if (transform.localPosition.y < -8.25f)
+        if (transform.localPosition.y < -8.3f)
         {
             AddReward(-0.01f);
             walkSprite.color = Color.red;
@@ -107,35 +124,27 @@ public class WalkBehaviour : Agent
         {
             walkSprite.color = normalColor;
         }
-
+   
     }
 
     //Called in FixedUpdate for physics changes
-    private void MoveAgent(ActionSegment<int> act)
+    private void MoveAgent(ActionBuffers actionBuffers)
     {
         //Afterwards try the continuos actions set up instead of discrete
-
-        int actionIndex = 0;
         lastPositionX = transform.localPosition.x;
+        int actionIndex = 0;
+        int offset = 20;
         foreach (HingeJoint2D joint in limbJoints)
         {
-            JointMotor2D motor = joint.motor;
-            motor.maxMotorTorque = maxMotorForce;
-            var action = act[actionIndex];
-            switch (action)
-            {
-                case 2:
-                    motor.motorSpeed = motorSpeed;
-                    break;
-                case 1:
-                    motor.motorSpeed = -motorSpeed;
-                    break;
-                case 3:
-                    motor.motorSpeed = 0;
-                    break; ;
 
-            }
+            JointMotor2D motor = joint.motor;
+            var motorSpeedSignal = actionBuffers.ContinuousActions[actionIndex];
+            var maxMotorForceSignal = actionBuffers.ContinuousActions[actionIndex];
+
+            motor.motorSpeed = motorSpeedSignal * MOTORSPEED + (offset * motorSpeedSignal);
+            motor.maxMotorTorque =   Mathf.Abs(maxMotorForceSignal) * MOTORFORCE + offset;
             joint.motor = motor;
+
             actionIndex++;
         }
 
@@ -176,12 +185,26 @@ public class WalkBehaviour : Agent
                 walkSprite.color = Color.red;
             }
         }
+        foreach (var collider in GameObject.FindGameObjectsWithTag("Leg"))
+        {
+            if (collider.gameObject.CompareTag("Wall"))
+            {
+                AddReward(-0.1f);
+            }
+        }
     }
     private void OnCollisionStay2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Wall"))
         {
             AddReward(-0.025f * Time.fixedDeltaTime);
+        }
+        foreach (var collider in GameObject.FindGameObjectsWithTag("Leg"))
+        {
+            if (collider.gameObject.CompareTag("Wall"))
+            {
+                AddReward(-0.025f * Time.fixedDeltaTime);
+            }
         }
     }
 
