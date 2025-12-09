@@ -14,10 +14,10 @@ public class WalkBehaviour : Agent
     [SerializeField] Transform[] limbs;
     [SerializeField] Collider2D[] legs;
 
-    [SerializeField] private float MOTORSPEED = 100;
-    [SerializeField] private float MOTORFORCE = 100;
+    [SerializeField] private float motorspeed = 100;
+    [SerializeField] private float maxMotorForce = 100;
 
-    private ActionBuffers currentActions;
+    private ActionSegment<int> currentActions;
     private float lastPositionX;
     private bool shouldMove = false;
 
@@ -93,8 +93,7 @@ public class WalkBehaviour : Agent
 
     public override void OnActionReceived(ActionBuffers actions)
     {
-
-        currentActions = actions;
+        currentActions = actions.DiscreteActions;
         shouldMove = true; 
         ChooseReward();
         cumalitiveReward = GetCumulativeReward();
@@ -115,7 +114,7 @@ public class WalkBehaviour : Agent
         }
 
         //Makes Sure agent stays a certain height to insure good walkiong
-        if (transform.localPosition.y < -8.3f)
+        if (transform.localPosition.y < -8.15f)
         {
             AddReward(-0.01f);
             walkSprite.color = Color.red;
@@ -128,23 +127,29 @@ public class WalkBehaviour : Agent
     }
 
     //Called in FixedUpdate for physics changes
-    private void MoveAgent(ActionBuffers actionBuffers)
+    private void MoveAgent(ActionSegment<int> act)
     {
-        //Afterwards try the continuos actions set up instead of discrete
         lastPositionX = transform.localPosition.x;
         int actionIndex = 0;
-        int offset = 20;
+        var action = act[actionIndex];
         foreach (HingeJoint2D joint in limbJoints)
         {
-
             JointMotor2D motor = joint.motor;
-            var motorSpeedSignal = actionBuffers.ContinuousActions[actionIndex];
-            var maxMotorForceSignal = actionBuffers.ContinuousActions[actionIndex];
-
-            motor.motorSpeed = motorSpeedSignal * MOTORSPEED + (offset * motorSpeedSignal);
-            motor.maxMotorTorque =   Mathf.Abs(maxMotorForceSignal) * MOTORFORCE + offset;
+            motor.maxMotorTorque = maxMotorForce;
             joint.motor = motor;
-
+            switch (action)
+            {
+                case 1:
+                    motor.motorSpeed = motorspeed;
+                    break;
+                case 2:
+                    motor.motorSpeed = -motorspeed;
+                    break;
+                case 3:
+                    motor.motorSpeed = 0;
+                    break; 
+            }
+            joint.motor = motor;
             actionIndex++;
         }
 
@@ -185,7 +190,7 @@ public class WalkBehaviour : Agent
                 walkSprite.color = Color.red;
             }
         }
-        foreach (var collider in GameObject.FindGameObjectsWithTag("Leg"))
+        foreach (Collider2D collider in legs)
         {
             if (collider.gameObject.CompareTag("Wall"))
             {
@@ -199,7 +204,7 @@ public class WalkBehaviour : Agent
         {
             AddReward(-0.025f * Time.fixedDeltaTime);
         }
-        foreach (var collider in GameObject.FindGameObjectsWithTag("Leg"))
+        foreach (Collider2D collider in legs)
         {
             if (collider.gameObject.CompareTag("Wall"))
             {

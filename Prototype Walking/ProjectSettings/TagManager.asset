@@ -7,11 +7,12 @@ TagManager:
   - Floor
   - Goal
   - Wall
+  - Leg
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Legs
   - Water
   - UI
   - 
