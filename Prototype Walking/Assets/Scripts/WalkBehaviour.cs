@@ -155,10 +155,7 @@ public class WalkBehaviour : Agent
         }
 
     }
-    private void Update()
-    {
-        ChooseReward();
-    }
+
     private void FixedUpdate()
     {
         if (shouldMove)
