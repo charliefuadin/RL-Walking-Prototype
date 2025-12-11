@@ -2,22 +2,22 @@
     "Walking": {
         "checkpoints": [
             {
-                "steps": 61903,
-                "file_path": "results\\walk5\\Walking\\Walking-61903.onnx",
-                "reward": null,
-                "creation_time": 1765252287.3632338,
+                "steps": 127766,
+                "file_path": "results\\walk5\\Walking\\Walking-127766.onnx",
+                "reward": -39.16457257270813,
+                "creation_time": 1765310091.5805702,
                 "auxillary_file_paths": [
-                    "results\\walk5\\Walking\\Walking-61903.pt"
+                    "results\\walk5\\Walking\\Walking-127766.pt"
                 ]
             }
         ],
         "final_checkpoint": {
-            "steps": 61903,
+            "steps": 127766,
             "file_path": "results\\walk5\\Walking.onnx",
-            "reward": null,
-            "creation_time": 1765252287.3632338,
+            "reward": -39.16457257270813,
+            "creation_time": 1765310091.5805702,
             "auxillary_file_paths": [
-                "results\\walk5\\Walking\\Walking-61903.pt"
+                "results\\walk5\\Walking\\Walking-127766.pt"
             ]
         }
     },
