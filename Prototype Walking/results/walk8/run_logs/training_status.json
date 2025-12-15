@@ -1,0 +1,29 @@
+{
+    "Walking": {
+        "checkpoints": [
+            {
+                "steps": 340558,
+                "file_path": "results\\walk8\\Walking\\Walking-340558.onnx",
+                "reward": -45.88469696044922,
+                "creation_time": 1765742218.0489087,
+                "auxillary_file_paths": [
+                    "results\\walk8\\Walking\\Walking-340558.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 340558,
+            "file_path": "results\\walk8\\Walking.onnx",
+            "reward": -45.88469696044922,
+            "creation_time": 1765742218.0489087,
+            "auxillary_file_paths": [
+                "results\\walk8\\Walking\\Walking-340558.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.2.0.dev0",
+        "torch_version": "2.2.2+cu121"
+    }
+}

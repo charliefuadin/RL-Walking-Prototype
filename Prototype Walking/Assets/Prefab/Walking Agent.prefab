@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 1564084047020791249}
   - component: {fileID: 6240598253857265822}
   - component: {fileID: 496900095001562116}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Walking Agent
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -207,8 +207,13 @@ MonoBehaviour:
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  MaxStep: 7000
+  MaxStep: 5000
   walkSprite: {fileID: 5071009506288398372}
+  limbColliders:
+  - {fileID: 2146427899023293889}
+  - {fileID: 8962605898544531894}
+  - {fileID: 817896911009734951}
+  - {fileID: 2213438781450176251}
   limbJoints:
   - {fileID: 6410569545515105439}
   - {fileID: 3840088119925833854}
@@ -220,7 +225,7 @@ MonoBehaviour:
   - {fileID: 6388903940767003722}
   - {fileID: 4359887053968072570}
   motorSpeed: 100
-  maxMotorForce: 100
+  maxMotorForce: 150
   currentEpisode: 0
   cumalitiveReward: 0
 --- !u!114 &6240598253857265822
@@ -299,7 +304,7 @@ GameObject:
   - component: {fileID: 3789605132529991914}
   m_Layer: 3
   m_Name: Lower Leg 2
-  m_TagString: Leg
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -488,7 +493,7 @@ GameObject:
   - component: {fileID: 2334641868103200039}
   m_Layer: 3
   m_Name: Upper Leg 2
-  m_TagString: Leg
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -885,7 +890,7 @@ GameObject:
   - component: {fileID: 3840088119925833854}
   m_Layer: 3
   m_Name: 'Lower Leg '
-  m_TagString: Leg
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1161,7 +1166,7 @@ GameObject:
   - component: {fileID: 6410569545515105439}
   m_Layer: 3
   m_Name: Upper Leg
-  m_TagString: Leg
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

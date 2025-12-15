@@ -10,6 +10,7 @@ public class WalkBehaviour : Agent
     [SerializeField] private SpriteRenderer walkSprite;
     private Color normalColor;
 
+    [SerializeField] Collider2D[] limbColliders;
     [SerializeField] HingeJoint2D[] limbJoints;
     [SerializeField] Transform[] limbs;
     [SerializeField] private float motorSpeed;
@@ -42,7 +43,7 @@ public class WalkBehaviour : Agent
 
     private void ResetScene()
     {
-        transform.localPosition = new Vector2(-20, -7.5f);
+        transform.localPosition = new Vector2(-10, -7.5f);
         transform.localRotation = Quaternion.identity;
         foreach (Transform limb in limbs)
         {
@@ -61,8 +62,8 @@ public class WalkBehaviour : Agent
     public override void CollectObservations(VectorSensor sensor)
     {
         //Rotation & Position of overall Agent
-        float positionNormalizedX = transform.localPosition.x / 20;
-        float positionNormalizedY = transform.localPosition.y / -6.5f;
+        float positionNormalizedX = transform.localPosition.x / 40;
+        float positionNormalizedY = transform.localPosition.y / 9f;
         float rotationNormalized = (transform.localRotation.eulerAngles.z / 360f) * 2f - 1f;
 
         //Rotatoin per Limb
@@ -113,9 +114,9 @@ public class WalkBehaviour : Agent
         if (walkSprite != null)
         {
             //Makes Sure agent stays a certain height to insure good walkiong
-            if (transform.localPosition.y < -8.2f)
+            if (transform.localPosition.y < -8.3f)
             {
-                AddReward(-0.01f);
+                AddReward(-0.005f);
                 //walkSprite.color = Color.red;
             }
             //else
@@ -169,7 +170,6 @@ public class WalkBehaviour : Agent
     {
         AddReward(4.0f);
         cumalitiveReward = GetCumulativeReward();
-
         EndEpisode();
     }
 
@@ -191,12 +191,29 @@ public class WalkBehaviour : Agent
             //    walkSprite.color = Color.red;
             //}
         }
+ 
+        foreach (var limb in limbColliders)
+        {
+            if (limb.gameObject.CompareTag("Wall"))
+            {
+                AddReward(-0.1f);
+            }
+        }
+
     }
     private void OnCollisionStay2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Wall"))
         {
             AddReward(-0.025f * Time.fixedDeltaTime);
+        }
+       
+        foreach (var limb in limbColliders)
+        {
+            if (limb.gameObject.CompareTag("Wall"))
+            {
+                AddReward(-0.025f * Time.fixedDeltaTime);
+            }
         }
     }
 
