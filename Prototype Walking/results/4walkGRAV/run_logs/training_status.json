@@ -1,0 +1,29 @@
+{
+    "4Walk": {
+        "checkpoints": [
+            {
+                "steps": 197236,
+                "file_path": "results\\4walkGRAV\\4Walk\\4Walk-197236.onnx",
+                "reward": 1.883163576776331,
+                "creation_time": 1765821615.021975,
+                "auxillary_file_paths": [
+                    "results\\4walkGRAV\\4Walk\\4Walk-197236.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 197236,
+            "file_path": "results\\4walkGRAV\\4Walk.onnx",
+            "reward": 1.883163576776331,
+            "creation_time": 1765821615.021975,
+            "auxillary_file_paths": [
+                "results\\4walkGRAV\\4Walk\\4Walk-197236.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.2.0.dev0",
+        "torch_version": "2.2.2+cu121"
+    }
+}

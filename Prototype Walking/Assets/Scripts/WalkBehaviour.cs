@@ -43,7 +43,7 @@ public class WalkBehaviour : Agent
 
     private void ResetScene()
     {
-        transform.localPosition = new Vector2(-10, -7.5f);
+        transform.localPosition = new Vector2(20, -7.5f);
         transform.localRotation = Quaternion.identity;
         foreach (Transform limb in limbs)
         {
@@ -92,7 +92,7 @@ public class WalkBehaviour : Agent
         float lastPositionX = transform.localPosition.x;
         yield return new WaitForSeconds(duration);
         currentPositionX = transform.localPosition.x;
-        if (currentPositionX < lastPositionX)
+        if (currentPositionX > lastPositionX)
         {
             AddReward(-0.01f);
             walkSprite.color = Color.red;
@@ -114,7 +114,7 @@ public class WalkBehaviour : Agent
         if (walkSprite != null)
         {
             //Makes Sure agent stays a certain height to insure good walkiong
-            if (transform.localPosition.y < -8.3f)
+            if (transform.localPosition.y < -8.2f)
             {
                 AddReward(-0.005f);
                 //walkSprite.color = Color.red;
@@ -130,7 +130,6 @@ public class WalkBehaviour : Agent
     //Called in FixedUpdate for physics changes
     private void MoveAgent(ActionSegment<int> act)
     {
-        //Afterwards try the continuos actions set up instead of discrete
 
         int actionIndex = 0;
         foreach (HingeJoint2D joint in limbJoints)
@@ -140,10 +139,10 @@ public class WalkBehaviour : Agent
             var action = act[actionIndex];
             switch (action)
             {
-                case 2:
+                case 1:
                     motor.motorSpeed = motorSpeed;
                     break;
-                case 1:
+                case 2:
                     motor.motorSpeed = -motorSpeed;
                     break;
                 case 3:
