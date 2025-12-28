@@ -7,24 +7,36 @@ using UnityEngine.U2D.IK;
 using System.Collections;
 public class WalkBehaviour : Agent
 {
+    #region Variables
+    [Header("Visual Componenets")]
     [SerializeField] private SpriteRenderer walkSprite;
     private Color normalColor;
 
+    [Header("Joint Components")]
     [SerializeField] Collider2D[] limbColliders;
     [SerializeField] HingeJoint2D[] limbJoints;
     [SerializeField] Transform[] limbs;
+
+    [Header("Physics varaibles")]
     [SerializeField] private float motorSpeed;
     [SerializeField] private float maxMotorForce;
+    private Rigidbody2D rb2D;
 
-    private ActionSegment<int> currentActions;
-    private bool shouldMove = false;
 
+    [Header("ML Rewards")]
     [HideInInspector] public int currentEpisode = 0;
     [HideInInspector] public float cumalitiveReward = 0f;
+    private float lastPositionX;
 
+    [Header("ML Actions")]
+    private ActionSegment<int> currentActions;
+    #endregion
+
+    #region Intializations
     public override void Initialize()
     {
         Debug.Log("Initialized");
+        rb2D = GetComponent<Rigidbody2D>();
         normalColor = walkSprite.color;
         currentEpisode = 0;
         cumalitiveReward = 0;
@@ -38,6 +50,7 @@ public class WalkBehaviour : Agent
         cumalitiveReward = 0f;
 
         ResetScene();
+        lastPositionX = transform.localPosition.x;
 
     }
 
@@ -57,8 +70,14 @@ public class WalkBehaviour : Agent
             motor.motorSpeed = 0;
             joint.motor = motor;
         }
-    }
 
+        rb2D.linearVelocity = Vector2.zero;
+        rb2D.angularVelocity = 0f;
+
+    }
+    #endregion
+
+    #region Observations
     public override void CollectObservations(VectorSensor sensor)
     {
         //Rotation & Position of overall Agent
@@ -72,27 +91,41 @@ public class WalkBehaviour : Agent
             float limbRotationNormalized = (transform.localRotation.eulerAngles.z / 360f) * 2f - 1f;
             sensor.AddObservation(limbRotationNormalized);
         }
+        //Velocities Check
+        sensor.AddObservation(rb2D.linearVelocity.x / 10f); // scale / normalize as needed
+        sensor.AddObservation(rb2D.linearVelocity.y / 10f);
 
         sensor.AddObservation(positionNormalizedX);
         sensor.AddObservation(positionNormalizedY);
         sensor.AddObservation(rotationNormalized);
     }
 
-    public override void OnActionReceived(ActionBuffers actions)
+  
+    private void ChooseReward()
     {
-        currentActions = actions.DiscreteActions;
-        shouldMove = true;
-        ChooseReward();
+        //I should do some better Reward shaping 
+        //Like for smooth walking or reaching certain positions
+        //Makesure to get to the goal Quickly
+        AddReward(-1f / MaxStep);
+        if (walkSprite != null)
+        {
+            PositionCheck();
+            HeightCheck();
+          
+        }
+    }
+    public void GoalReached()
+    {
+        AddReward(6.0f);
         cumalitiveReward = GetCumulativeReward();
+        EndEpisode();
     }
 
-    private IEnumerator PositionPenalization(float duration)
+    private void PositionCheck()
     {
-        float currentPositionX;
-        float lastPositionX = transform.localPosition.x;
-        yield return new WaitForSeconds(duration);
-        currentPositionX = transform.localPosition.x;
-        if (currentPositionX > lastPositionX)
+        float currentPositionX = transform.position.x;
+        float differenceX = currentPositionX - lastPositionX;
+        if (differenceX < 0)
         {
             AddReward(-0.01f);
             walkSprite.color = Color.red;
@@ -102,35 +135,43 @@ public class WalkBehaviour : Agent
         {
             walkSprite.color = normalColor;
         }
-
+        lastPositionX = currentPositionX;
     }
-    private void ChooseReward()
+
+    private void HeightCheck()
     {
-        //I should do some better Reward shaping 
-        //Like for smooth walking or reaching certain positions
-        //Makesure to get to the goal Quickly
-        AddReward(-1f / MaxStep);
-        StartCoroutine(PositionPenalization(3f));
-        if (walkSprite != null)
+        //Makes Sure agent stays a certain height to insure good walkiong
+        if (transform.localPosition.y < -8.2f)
         {
-            //Makes Sure agent stays a certain height to insure good walkiong
-            if (transform.localPosition.y < -8.2f)
-            {
-                AddReward(-0.005f);
-                //walkSprite.color = Color.red;
-            }
-            //else
-            //{
-            //    walkSprite.color = normalColor;
-            //}
-          
+            AddReward(-0.005f);
+            //walkSprite.color = Color.red;
+        }
+        //else
+        //{
+        //    walkSprite.color = normalColor;
+        //}
+    }
+    #endregion
+
+    #region Actions
+    public override void OnActionReceived(ActionBuffers actions)
+    {
+        currentActions = actions.DiscreteActions;
+        ChooseReward();
+        cumalitiveReward = GetCumulativeReward();
+    }
+
+    private void FixedUpdate()
+    {
+        if(currentActions.Length > 0)
+        {
+            MoveAgent(currentActions);
         }
     }
 
     //Called in FixedUpdate for physics changes
     private void MoveAgent(ActionSegment<int> act)
     {
-
         int actionIndex = 0;
         foreach (HingeJoint2D joint in limbJoints)
         {
@@ -148,6 +189,9 @@ public class WalkBehaviour : Agent
                 case 3:
                     motor.motorSpeed = 0;
                     break; ;
+                default:
+                    motor.motorSpeed = 0f; // safe fallback
+                    break;
 
             }
             joint.motor = motor;
@@ -155,23 +199,10 @@ public class WalkBehaviour : Agent
         }
 
     }
+    #endregion
 
-    private void FixedUpdate()
-    {
-        if (shouldMove)
-        {
-            MoveAgent(currentActions);
-            shouldMove = false; //reset the flag after its use
-        }
-    }
 
-    public void GoalReached()
-    {
-        AddReward(4.0f);
-        cumalitiveReward = GetCumulativeReward();
-        EndEpisode();
-    }
-
+    #region Collision Checks
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.gameObject.CompareTag("Goal"))
@@ -185,10 +216,10 @@ public class WalkBehaviour : Agent
         if (collision.gameObject.CompareTag("Wall"))
         {
             AddReward(-0.1f);
-            //if (walkSprite != null)
-            //{
-            //    walkSprite.color = Color.red;
-            //}
+            if (walkSprite != null)
+            {
+                walkSprite.color = Color.red;
+            }
         }
  
         foreach (var limb in limbColliders)
@@ -218,9 +249,10 @@ public class WalkBehaviour : Agent
 
     private void OnCollisionExit2D(Collision2D collision)
     {
-        //if (walkSprite != null)
-        //{
-        //    walkSprite.color = normalColor;
-        //}
+        if (walkSprite != null)
+        {
+            walkSprite.color = normalColor;
+        }
     }
+    #endregion
 }
