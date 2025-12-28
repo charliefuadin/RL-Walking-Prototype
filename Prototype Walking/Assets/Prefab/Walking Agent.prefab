@@ -207,7 +207,7 @@ MonoBehaviour:
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  MaxStep: 5000
+  MaxStep: 6000
   walkSprite: {fileID: 5071009506288398372}
   limbColliders:
   - {fileID: 2146427899023293889}
@@ -472,7 +472,7 @@ HingeJoint2D:
   m_UseConnectedAnchor: 1
   m_UseMotor: 1
   m_Motor:
-    m_MotorSpeed: 6
+    m_MotorSpeed: 60
     m_MaximumMotorForce: 100
   m_UseLimits: 1
   m_AngleLimits:
@@ -1058,7 +1058,7 @@ HingeJoint2D:
   m_UseConnectedAnchor: 1
   m_UseMotor: 1
   m_Motor:
-    m_MotorSpeed: 6
+    m_MotorSpeed: 60
     m_MaximumMotorForce: 100
   m_UseLimits: 1
   m_AngleLimits:
@@ -1334,7 +1334,7 @@ HingeJoint2D:
   m_UseConnectedAnchor: 1
   m_UseMotor: 1
   m_Motor:
-    m_MotorSpeed: 6
+    m_MotorSpeed: 60
     m_MaximumMotorForce: 100
   m_UseLimits: 1
   m_AngleLimits:

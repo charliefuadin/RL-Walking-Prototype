@@ -43,7 +43,7 @@ public class WalkBehaviour : Agent
 
     private void ResetScene()
     {
-        transform.localPosition = new Vector2(20, -7.5f);
+        transform.localPosition = new Vector2(-20, -7.5f);
         transform.localRotation = Quaternion.identity;
         foreach (Transform limb in limbs)
         {
