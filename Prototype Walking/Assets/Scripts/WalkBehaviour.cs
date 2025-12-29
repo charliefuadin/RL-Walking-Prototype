@@ -1,10 +1,11 @@
-using Unity.MLAgents;
+ using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.U2D.IK;
 using System.Collections;
+using System.Linq;
 public class WalkBehaviour : Agent
 {
     #region Variables
@@ -20,6 +21,8 @@ public class WalkBehaviour : Agent
     [Header("Physics varaibles")]
     [SerializeField] private float motorSpeed;
     [SerializeField] private float maxMotorForce;
+
+    [SerializeField] private float velocityDeadZone;
     private Rigidbody2D rb2D;
 
 
@@ -40,6 +43,7 @@ public class WalkBehaviour : Agent
         normalColor = walkSprite.color;
         currentEpisode = 0;
         cumalitiveReward = 0;
+        StartCoroutine(PositionCheck());
     }
 
     public override void OnEpisodeBegin()
@@ -50,8 +54,6 @@ public class WalkBehaviour : Agent
         cumalitiveReward = 0f;
 
         ResetScene();
-        lastPositionX = transform.localPosition.x;
-
     }
 
     private void ResetScene()
@@ -109,7 +111,7 @@ public class WalkBehaviour : Agent
         AddReward(-1f / MaxStep);
         if (walkSprite != null)
         {
-            PositionCheck();
+            
             HeightCheck();
           
         }
@@ -120,23 +122,24 @@ public class WalkBehaviour : Agent
         cumalitiveReward = GetCumulativeReward();
         EndEpisode();
     }
-
-    private void PositionCheck()
-    {
-        float currentPositionX = transform.position.x;
-        float differenceX = currentPositionX - lastPositionX;
-        if (differenceX < 0)
-        {
-            AddReward(-0.01f);
-            walkSprite.color = Color.red;
-            Debug.Log("Behind");
-        }
-        else
-        {
-            walkSprite.color = normalColor;
-        }
-        lastPositionX = currentPositionX;
-    }
+    //private IEnumerator PositionCheck()
+    //{
+    //    lastPositionX = transform.position.x;
+    //    yield return new WaitForSeconds(3f);
+    //    float currentPositionX = transform.position.x;
+    //    float differenceX = currentPositionX - lastPositionX;
+    //    if (differenceX < 0)
+    //    {
+    //        AddReward(-0.01f);
+    //        walkSprite.color = Color.red;
+    //        Debug.Log("Behind");
+    //    }
+    //    else
+    //    {
+    //        walkSprite.color = normalColor;
+    //    }
+    //    StartCoroutine(PositionCheck());
+    //}
 
     private void HeightCheck()
     {
@@ -160,6 +163,7 @@ public class WalkBehaviour : Agent
         ChooseReward();
         cumalitiveReward = GetCumulativeReward();
     }
+    
 
     private void FixedUpdate()
     {
