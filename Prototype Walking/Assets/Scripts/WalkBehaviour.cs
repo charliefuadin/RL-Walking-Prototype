@@ -1,4 +1,4 @@
- using Unity.MLAgents;
+using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using Unity.VisualScripting;
@@ -21,21 +21,27 @@ public class WalkBehaviour : Agent
     [Header("Physics varaibles")]
     [SerializeField] private float motorSpeed;
     [SerializeField] private float maxMotorForce;
-
-    [SerializeField] private float velocityDeadZone;
     private Rigidbody2D rb2D;
 
 
     [Header("ML Rewards")]
+    [SerializeField] private float forwardScale = 1f;
+    [SerializeField] private float smoothTimeConstant = 0.25f;
+    [SerializeField] private float velocityDeadZone = 0.05f;
+    [SerializeField] private float maxRewardPerStep;
+    private float smoothedSpeed = 0f;
+
     [HideInInspector] public int currentEpisode = 0;
     [HideInInspector] public float cumalitiveReward = 0f;
-    private float lastPositionX;
 
     [Header("ML Actions")]
     private ActionSegment<int> currentActions;
     #endregion
 
     #region Intializations
+
+  
+
     public override void Initialize()
     {
         Debug.Log("Initialized");
@@ -43,7 +49,8 @@ public class WalkBehaviour : Agent
         normalColor = walkSprite.color;
         currentEpisode = 0;
         cumalitiveReward = 0;
-        StartCoroutine(PositionCheck());
+
+        smoothedSpeed = rb2D.linearVelocityX;
     }
 
     public override void OnEpisodeBegin()
@@ -94,8 +101,8 @@ public class WalkBehaviour : Agent
             sensor.AddObservation(limbRotationNormalized);
         }
         //Velocities Check
-        sensor.AddObservation(rb2D.linearVelocity.x / 10f); // scale / normalize as needed
-        sensor.AddObservation(rb2D.linearVelocity.y / 10f);
+        sensor.AddObservation(rb2D.linearVelocityX / 6f); // scale / normalize as needed
+        sensor.AddObservation(rb2D.linearVelocityY / 6f);
 
         sensor.AddObservation(positionNormalizedX);
         sensor.AddObservation(positionNormalizedY);
@@ -108,7 +115,6 @@ public class WalkBehaviour : Agent
         //I should do some better Reward shaping 
         //Like for smooth walking or reaching certain positions
         //Makesure to get to the goal Quickly
-        AddReward(-1f / MaxStep);
         if (walkSprite != null)
         {
             
@@ -122,25 +128,42 @@ public class WalkBehaviour : Agent
         cumalitiveReward = GetCumulativeReward();
         EndEpisode();
     }
-    //private IEnumerator PositionCheck()
-    //{
-    //    lastPositionX = transform.position.x;
-    //    yield return new WaitForSeconds(3f);
-    //    float currentPositionX = transform.position.x;
-    //    float differenceX = currentPositionX - lastPositionX;
-    //    if (differenceX < 0)
-    //    {
-    //        AddReward(-0.01f);
-    //        walkSprite.color = Color.red;
-    //        Debug.Log("Behind");
-    //    }
-    //    else
-    //    {
-    //        walkSprite.color = normalColor;
-    //    }
-    //    StartCoroutine(PositionCheck());
-    //}
 
+    /// <summary>
+    /// EMA(Exponential Moving Average) based position check
+    /// im gonna cry :(
+    /// Refine the global variables IE refine the rewards and penalization magnitude
+    /// test out collision so no weird movement
+    /// FIX THE WEIRD MOVEMENT EVEN THOUGH THEY RUN EFFICIENTLY NOW
+    /// </summary>
+    private void VelocityReward()
+    {
+        float timeStep = Time.fixedDeltaTime;
+        float currentVelocity = rb2D.linearVelocity.x;
+
+        // exact alpha for continuous-time EMA
+        float alpha = 1f - Mathf.Exp(-timeStep / smoothTimeConstant); //Low pass filter 1 - e^-timeStep / smoothTimeConstant
+        smoothedSpeed = Mathf.Lerp(smoothedSpeed , rb2D.linearVelocityX, alpha); // Lerp replaces smoothedSpeed = alpha * vx + (1-alpha) * smoothedSpeed(previous)
+
+        // deadzone: ignore tiny jitter
+        float usedSpeed;
+        if (Mathf.Abs(smoothedSpeed) > velocityDeadZone)
+        {
+            //subtract deadzone so small speeds do not matter
+            usedSpeed = Mathf.Sign(smoothedSpeed) * (Mathf.Abs(smoothedSpeed) - velocityDeadZone);
+        }
+        else
+        {
+            usedSpeed = 0f;
+        }
+
+        float rewardThisStep = usedSpeed * forwardScale * timeStep; //Continuous Threshold
+        rewardThisStep = Mathf.Clamp(rewardThisStep, -maxRewardPerStep, maxRewardPerStep); //Makesure the reward does not spike
+        AddReward(rewardThisStep);
+
+    }
+
+    //apply a continuous threshold here later
     private void HeightCheck()
     {
         //Makes Sure agent stays a certain height to insure good walkiong
@@ -171,6 +194,7 @@ public class WalkBehaviour : Agent
         {
             MoveAgent(currentActions);
         }
+        VelocityReward();
     }
 
     //Called in FixedUpdate for physics changes

@@ -226,6 +226,10 @@ MonoBehaviour:
   - {fileID: 4359887053968072570}
   motorSpeed: 100
   maxMotorForce: 150
+  forwardScale: 1
+  smoothTimeConstant: 0.25
+  velocityDeadZone: 0.05
+  maxRewardPerStep: 1
   currentEpisode: 0
   cumalitiveReward: 0
 --- !u!114 &6240598253857265822
@@ -240,7 +244,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DecisionPeriod: 5
+  DecisionPeriod: 6
   DecisionStep: 0
   TakeActionsBetweenDecisions: 1
 --- !u!61 &496900095001562116
