@@ -1,4 +1,4 @@
-using Unity.MLAgents;
+﻿using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using Unity.VisualScripting;
@@ -8,21 +8,34 @@ using System.Collections;
 using System.Linq;
 public class WalkBehaviour : Agent
 {
+    /// <summary>
+    ///Changed the Limb to its own class
+    ///Now its like custom variables in cs Academy so easier
+    ///Saw this shit on a yt video now im so happy ;)
+    /// </summary>
+    [System.Serializable]
+    public class Limb
+    {
+        public GameObject gameObject;
+        public Transform transform;
+        public Rigidbody2D rb;
+        public Collider2D collider;
+        public HingeJoint2D joint;
+
+        public float maxMotorForce;
+    }
+    [SerializeField] private Limb[] limbs;
+
     #region Variables
     [Header("Visual Componenets")]
-    [SerializeField] private SpriteRenderer walkSprite;
+    private SpriteRenderer walkSprite;
     private Color normalColor;
-
-    [Header("Joint Components")]
-    [SerializeField] Collider2D[] limbColliders;
-    [SerializeField] HingeJoint2D[] limbJoints;
-    [SerializeField] Transform[] limbs;
 
     [Header("Physics varaibles")]
     [SerializeField] private float motorSpeed;
-    [SerializeField] private float maxMotorForce;
+    [SerializeField] private float maxTorque;
+    [SerializeField] private float torqueScaler;
     private Rigidbody2D rb2D;
-
 
     [Header("ML Rewards")]
     [SerializeField] private float forwardScale = 1f;
@@ -38,10 +51,8 @@ public class WalkBehaviour : Agent
     private ActionSegment<int> currentActions;
     #endregion
 
+
     #region Intializations
-
-  
-
     public override void Initialize()
     {
         Debug.Log("Initialized");
@@ -51,6 +62,9 @@ public class WalkBehaviour : Agent
         cumalitiveReward = 0;
 
         smoothedSpeed = rb2D.linearVelocityX;
+
+        walkSprite = GetComponent<SpriteRenderer>();
+
     }
 
     public override void OnEpisodeBegin()
@@ -61,25 +75,50 @@ public class WalkBehaviour : Agent
         cumalitiveReward = 0f;
 
         ResetScene();
+        //On begin for evolutionary purposes in case of changes in rb
+        foreach (var limb in limbs)
+        {
+            float limbLength = LimbLength(limb.rb, limb.transform);
+            limb.maxMotorForce = MaxMotorForce(limbLength, limb.rb.mass);
+        }
+    }
+    //If needed add mathf.sin(angle) to be more specific on what torque we need based on the angle of the leg
+    //τorque = m⋅g⋅r⋅sin(θ)
+    private float MaxMotorForce(float limbLength, float limbMass)
+    {
+        float gravity = Mathf.Abs(Physics2D.gravity.y) * rb2D.gravityScale;
+        float maxMotorForce = (limbMass * gravity * limbLength * torqueScaler);
+        maxMotorForce = Mathf.Clamp(maxMotorForce, 0f, maxTorque);
+        return maxMotorForce;
+    }
+
+    //Make sure to know whether this on initialize or not
+    //We dont know if a specific length is gonna change or proportionally full body change during evolution
+    private float LimbLength(Rigidbody2D limb, Transform joint)
+    {
+        Vector2 jointPos = joint.transform.position;
+        Vector2 limbPos = limb.transform.position;
+
+        float limblength = Vector2.Distance(limbPos, jointPos);
+        return limblength;
     }
 
     private void ResetScene()
     {
         transform.localPosition = new Vector2(-20, -7.5f);
         transform.localRotation = Quaternion.identity;
-        foreach (Transform limb in limbs)
+        foreach (var limb in limbs)
         {
-            Vector3 eulerAngles = limb.localEulerAngles;
+            //Transform reset
+            Vector3 eulerAngles = limb.transform.localEulerAngles;
             eulerAngles.z = 0f;
-            limb.localEulerAngles = eulerAngles;
-        }
-        foreach (HingeJoint2D joint in limbJoints)
-        {
-            JointMotor2D motor = joint.motor;
-            motor.motorSpeed = 0;
-            joint.motor = motor;
-        }
+            limb.transform.localEulerAngles = eulerAngles;
 
+            //Motor Reset
+            JointMotor2D motor = limb.joint.motor;
+            motor.motorSpeed = 0;
+            limb.joint.motor = motor;
+        }
         rb2D.linearVelocity = Vector2.zero;
         rb2D.angularVelocity = 0f;
 
@@ -95,9 +134,9 @@ public class WalkBehaviour : Agent
         float rotationNormalized = (transform.localRotation.eulerAngles.z / 360f) * 2f - 1f;
 
         //Rotatoin per Limb
-        foreach (Transform transform in limbs)
+        foreach (var limb in limbs)
         {
-            float limbRotationNormalized = (transform.localRotation.eulerAngles.z / 360f) * 2f - 1f;
+            float limbRotationNormalized = (limb.transform.localRotation.eulerAngles.z / 360f) * 2f - 1f;
             sensor.AddObservation(limbRotationNormalized);
         }
         //Velocities Check
@@ -135,32 +174,47 @@ public class WalkBehaviour : Agent
     /// Refine the global variables IE refine the rewards and penalization magnitude
     /// test out collision so no weird movement
     /// FIX THE WEIRD MOVEMENT EVEN THOUGH THEY RUN EFFICIENTLY NOW
+    /// Weird movement also based off of the maxmotorforce which i did up in intitialization
     /// </summary>
     private void VelocityReward()
     {
+        // Get the current fixed timestep
         float timeStep = Time.fixedDeltaTime;
+
+        // Current horizontal velocity of lebron man
         float currentVelocity = rb2D.linearVelocity.x;
 
-        // exact alpha for continuous-time EMA
-        float alpha = 1f - Mathf.Exp(-timeStep / smoothTimeConstant); //Low pass filter 1 - e^-timeStep / smoothTimeConstant
-        smoothedSpeed = Mathf.Lerp(smoothedSpeed , rb2D.linearVelocityX, alpha); // Lerp replaces smoothedSpeed = alpha * vx + (1-alpha) * smoothedSpeed(previous)
+        // Compute alpha for exponential moving average (EMA)
+        // EMA smooths out velocity over time for stable reward calculation
+        // Formula: alpha = 1 - exp(-dt / tau)
+        float alpha = 1f - Mathf.Exp(-timeStep / smoothTimeConstant);
 
-        // deadzone: ignore tiny jitter
+        // Update smoothed speed using linear interpolation
+        // Equivalent to EMA: smoothedSpeed = alpha * current + (1-alpha) * previous smoothedspeed
+        smoothedSpeed = Mathf.Lerp(smoothedSpeed, rb2D.linearVelocityX, alpha);
+
+        // Apply a deadzone to ignore very small jitters
         float usedSpeed;
         if (Mathf.Abs(smoothedSpeed) > velocityDeadZone)
         {
-            //subtract deadzone so small speeds do not matter
+            // Subtract deadzone so tiny velocities don't contribute to reward
             usedSpeed = Mathf.Sign(smoothedSpeed) * (Mathf.Abs(smoothedSpeed) - velocityDeadZone);
         }
         else
         {
+            // Velocity too small, treated as zero
             usedSpeed = 0f;
         }
 
-        float rewardThisStep = usedSpeed * forwardScale * timeStep; //Continuous Threshold
-        rewardThisStep = Mathf.Clamp(rewardThisStep, -maxRewardPerStep, maxRewardPerStep); //Makesure the reward does not spike
-        AddReward(rewardThisStep);
+        // Compute reward for this timestep
+        // Reward is proportional to forward speed and timestep
+        float rewardThisStep = usedSpeed * forwardScale * timeStep;
 
+        // Clamp reward to avoid spikes
+        rewardThisStep = Mathf.Clamp(rewardThisStep, -maxRewardPerStep, maxRewardPerStep);
+
+        // Apply reward to the agent
+        AddReward(rewardThisStep);
     }
 
     //apply a continuous threshold here later
@@ -201,10 +255,10 @@ public class WalkBehaviour : Agent
     private void MoveAgent(ActionSegment<int> act)
     {
         int actionIndex = 0;
-        foreach (HingeJoint2D joint in limbJoints)
+        foreach (var limb in limbs)
         {
-            JointMotor2D motor = joint.motor;
-            motor.maxMotorTorque = maxMotorForce;
+            JointMotor2D motor = limb.joint.motor;
+            motor.maxMotorTorque = limb.maxMotorForce;
             var action = act[actionIndex];
             switch (action)
             {
@@ -222,7 +276,7 @@ public class WalkBehaviour : Agent
                     break;
 
             }
-            joint.motor = motor;
+            limb.joint.motor = motor;
             actionIndex++;
         }
 
@@ -250,7 +304,7 @@ public class WalkBehaviour : Agent
             }
         }
  
-        foreach (var limb in limbColliders)
+        foreach (var limb in limbs)
         {
             if (limb.gameObject.CompareTag("Wall"))
             {
@@ -266,7 +320,7 @@ public class WalkBehaviour : Agent
             AddReward(-0.025f * Time.fixedDeltaTime);
         }
        
-        foreach (var limb in limbColliders)
+        foreach (var limb in limbs)
         {
             if (limb.gameObject.CompareTag("Wall"))
             {

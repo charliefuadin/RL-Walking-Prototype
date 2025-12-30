@@ -15,7 +15,6 @@ GameObject:
   - component: {fileID: 1332361826024624310}
   - component: {fileID: 1564084047020791249}
   - component: {fileID: 6240598253857265822}
-  - component: {fileID: 496900095001562116}
   m_Layer: 3
   m_Name: Walking Agent
   m_TagString: Player
@@ -160,7 +159,7 @@ Rigidbody2D:
   m_Interpolate: 1
   m_SleepingMode: 1
   m_CollisionDetection: 1
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!114 &1332361826024624310
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -208,24 +207,35 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 6000
-  walkSprite: {fileID: 5071009506288398372}
-  limbColliders:
-  - {fileID: 2146427899023293889}
-  - {fileID: 8962605898544531894}
-  - {fileID: 817896911009734951}
-  - {fileID: 2213438781450176251}
-  limbJoints:
-  - {fileID: 6410569545515105439}
-  - {fileID: 3840088119925833854}
-  - {fileID: 2334641868103200039}
-  - {fileID: 3789605132529991914}
   limbs:
-  - {fileID: 4388182875372476567}
-  - {fileID: 4846972414774822514}
-  - {fileID: 6388903940767003722}
-  - {fileID: 4359887053968072570}
+  - gameObject: {fileID: 8519415829599129950}
+    transform: {fileID: 4388182875372476567}
+    rb: {fileID: 3295502689649679950}
+    collider: {fileID: 2146427899023293889}
+    joint: {fileID: 6410569545515105439}
+    maxMotorForce: 0
+  - gameObject: {fileID: 7455875349467764119}
+    transform: {fileID: 4846972414774822514}
+    rb: {fileID: 4189937764995241318}
+    collider: {fileID: 817896911009734951}
+    joint: {fileID: 3840088119925833854}
+    maxMotorForce: 0
+  - gameObject: {fileID: 3662539461499495052}
+    transform: {fileID: 6388903940767003722}
+    rb: {fileID: 3034473613851024342}
+    collider: {fileID: 8962605898544531894}
+    joint: {fileID: 2334641868103200039}
+    maxMotorForce: 0
+  - gameObject: {fileID: 2829290049761754084}
+    transform: {fileID: 4359887053968072570}
+    rb: {fileID: 8857498231137487627}
+    collider: {fileID: 2213438781450176251}
+    joint: {fileID: 3789605132529991914}
+    maxMotorForce: 0
+  walkSprite: {fileID: 5071009506288398372}
   motorSpeed: 100
-  maxMotorForce: 150
+  maxTorque: 100
+  torqueScaler: 3
   forwardScale: 1
   smoothTimeConstant: 0.25
   velocityDeadZone: 0.05
@@ -247,52 +257,6 @@ MonoBehaviour:
   DecisionPeriod: 6
   DecisionStep: 0
   TakeActionsBetweenDecisions: 1
---- !u!61 &496900095001562116
-BoxCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1034900625953073}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
-    newSize: {x: 1, y: 1}
-    adaptiveTilingThreshold: 0.5
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
 --- !u!1 &2829290049761754084
 GameObject:
   m_ObjectHideFlags: 0
