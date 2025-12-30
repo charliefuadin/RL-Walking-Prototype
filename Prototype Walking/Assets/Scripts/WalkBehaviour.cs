@@ -126,6 +126,10 @@ public class WalkBehaviour : Agent
     #endregion
 
     #region Observations
+    //We lowk need to know what more observations we need to add
+    //Like should we let him know  about what his maxmotorforce is? during this scene because it changed from evolution
+    //also should we put limb position or no?
+    //how much till it tweaks lmao
     public override void CollectObservations(VectorSensor sensor)
     {
         //Rotation & Position of overall Agent
