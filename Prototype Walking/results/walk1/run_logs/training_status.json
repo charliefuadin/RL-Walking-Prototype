@@ -2,28 +2,64 @@
     "Walking": {
         "checkpoints": [
             {
-                "steps": 312596,
-                "file_path": "results\\walk1\\Walking\\Walking-312596.onnx",
-                "reward": -30.09933227300644,
-                "creation_time": 1764906748.014623,
+                "steps": 704,
+                "file_path": "results\\walk1\\Walking\\Walking-704.onnx",
+                "reward": null,
+                "creation_time": 1768157412.7698293,
                 "auxillary_file_paths": [
-                    "results\\walk1\\Walking\\Walking-312596.pt"
+                    "results\\walk1\\Walking\\Walking-704.pt"
+                ]
+            },
+            {
+                "steps": 6536,
+                "file_path": "results\\walk1\\Walking\\Walking-6536.onnx",
+                "reward": -30.137534046173094,
+                "creation_time": 1768157873.9943955,
+                "auxillary_file_paths": [
+                    "results\\walk1\\Walking\\Walking-6536.pt"
+                ]
+            },
+            {
+                "steps": 7176,
+                "file_path": "results\\walk1\\Walking\\Walking-7176.onnx",
+                "reward": null,
+                "creation_time": 1768158087.372029,
+                "auxillary_file_paths": [
+                    "results\\walk1\\Walking\\Walking-7176.pt"
+                ]
+            },
+            {
+                "steps": 7496,
+                "file_path": "results\\walk1\\Walking\\Walking-7496.onnx",
+                "reward": null,
+                "creation_time": 1768158218.8453174,
+                "auxillary_file_paths": [
+                    "results\\walk1\\Walking\\Walking-7496.pt"
+                ]
+            },
+            {
+                "steps": 8496,
+                "file_path": "results\\walk1\\Walking\\Walking-8496.onnx",
+                "reward": -2.116980090737343,
+                "creation_time": 1768158381.5682812,
+                "auxillary_file_paths": [
+                    "results\\walk1\\Walking\\Walking-8496.pt"
                 ]
             }
         ],
         "final_checkpoint": {
-            "steps": 312596,
+            "steps": 8496,
             "file_path": "results\\walk1\\Walking.onnx",
-            "reward": -30.09933227300644,
-            "creation_time": 1764906748.014623,
+            "reward": -2.116980090737343,
+            "creation_time": 1768158381.5682812,
             "auxillary_file_paths": [
-                "results\\walk1\\Walking\\Walking-312596.pt"
+                "results\\walk1\\Walking\\Walking-8496.pt"
             ]
         }
     },
     "metadata": {
         "stats_format_version": "0.3.0",
         "mlagents_version": "1.2.0.dev0",
-        "torch_version": "2.2.2+cu121"
+        "torch_version": "2.2.2+cpu"
     }
 }

@@ -1,0 +1,47 @@
+{
+    "PerfectWalking": {
+        "checkpoints": [
+            {
+                "steps": 499989,
+                "file_path": "results\\walkingPerfect\\PerfectWalking\\PerfectWalking-499989.onnx",
+                "reward": 50.72371204437748,
+                "creation_time": 1769529789.8976533,
+                "auxillary_file_paths": [
+                    "results\\walkingPerfect\\PerfectWalking\\PerfectWalking-499989.pt"
+                ]
+            },
+            {
+                "steps": 999976,
+                "file_path": "results\\walkingPerfect\\PerfectWalking\\PerfectWalking-999976.onnx",
+                "reward": 49.219982862472534,
+                "creation_time": 1769530412.2547593,
+                "auxillary_file_paths": [
+                    "results\\walkingPerfect\\PerfectWalking\\PerfectWalking-999976.pt"
+                ]
+            },
+            {
+                "steps": 1000040,
+                "file_path": "results\\walkingPerfect\\PerfectWalking\\PerfectWalking-1000040.onnx",
+                "reward": 49.219982862472534,
+                "creation_time": 1769530412.3631861,
+                "auxillary_file_paths": [
+                    "results\\walkingPerfect\\PerfectWalking\\PerfectWalking-1000040.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 1000040,
+            "file_path": "results\\walkingPerfect\\PerfectWalking.onnx",
+            "reward": 49.219982862472534,
+            "creation_time": 1769530412.3631861,
+            "auxillary_file_paths": [
+                "results\\walkingPerfect\\PerfectWalking\\PerfectWalking-1000040.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.2.0.dev0",
+        "torch_version": "2.2.2+cu121"
+    }
+}

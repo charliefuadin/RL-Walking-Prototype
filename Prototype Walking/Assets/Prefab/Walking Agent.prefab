@@ -15,6 +15,8 @@ GameObject:
   - component: {fileID: 1332361826024624310}
   - component: {fileID: 1564084047020791249}
   - component: {fileID: 6240598253857265822}
+  - component: {fileID: -2025416545584655442}
+  - component: {fileID: 457027610114879376}
   m_Layer: 3
   m_Name: Walking Agent
   m_TagString: Player
@@ -40,6 +42,7 @@ Transform:
   - {fileID: 4846972414774822514}
   - {fileID: 4359887053968072570}
   - {fileID: 6735886870099498989}
+  - {fileID: 375846499074536335}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &5071009506288398372
@@ -87,7 +90,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.9528302, g: 0.91237986, b: 0.91237986, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -173,7 +176,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 9
+    VectorObservationSize: 12
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -182,7 +185,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 87aba0b9f8a276e45b5ab3f5a5c89b7f, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 0a52a65a2418f9a4fbbe75a82e922c65, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: Walking
@@ -206,42 +209,57 @@ MonoBehaviour:
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  MaxStep: 6000
+  MaxStep: 8000
   limbs:
   - gameObject: {fileID: 8519415829599129950}
     transform: {fileID: 4388182875372476567}
     rb: {fileID: 3295502689649679950}
     collider: {fileID: 2146427899023293889}
     joint: {fileID: 6410569545515105439}
+    energyAccumalation: 0
     maxMotorForce: 0
+    limbLength: 0
   - gameObject: {fileID: 7455875349467764119}
     transform: {fileID: 4846972414774822514}
     rb: {fileID: 4189937764995241318}
     collider: {fileID: 817896911009734951}
     joint: {fileID: 3840088119925833854}
+    energyAccumalation: 0
     maxMotorForce: 0
+    limbLength: 0
   - gameObject: {fileID: 3662539461499495052}
     transform: {fileID: 6388903940767003722}
     rb: {fileID: 3034473613851024342}
     collider: {fileID: 8962605898544531894}
     joint: {fileID: 2334641868103200039}
+    energyAccumalation: 0
     maxMotorForce: 0
+    limbLength: 0
   - gameObject: {fileID: 2829290049761754084}
     transform: {fileID: 4359887053968072570}
     rb: {fileID: 8857498231137487627}
     collider: {fileID: 2213438781450176251}
     joint: {fileID: 3789605132529991914}
+    energyAccumalation: 0
     maxMotorForce: 0
-  walkSprite: {fileID: 5071009506288398372}
-  motorSpeed: 100
+    limbLength: 0
+  motorSpeed: 300
   maxTorque: 100
-  torqueScaler: 3
+  strengthMultiplier: 20
+  topJoint: {fileID: 375846499074536335}
   forwardScale: 1
   smoothTimeConstant: 0.25
   velocityDeadZone: 0.05
-  maxRewardPerStep: 1
+  maxRewardPerStep: 4
+  heightRewardWeight: 0.2
+  groundTouchHeight: 8.6
   currentEpisode: 0
   cumalitiveReward: 0
+  evolution: {fileID: 0}
+  dna: {fileID: 0}
+  cumalitiveEnergy: 0
+  yourSelf: {fileID: 1034900625953073}
+  liveState: 1
 --- !u!114 &6240598253857265822
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -257,6 +275,35 @@ MonoBehaviour:
   DecisionPeriod: 6
   DecisionStep: 0
   TakeActionsBetweenDecisions: 1
+--- !u!114 &-2025416545584655442
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1034900625953073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7052f681de63fd43955459ab080c2b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fitnessScore: 0
+  agentScore: 0
+--- !u!114 &457027610114879376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1034900625953073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3749d1a420a835d4ea3f773d67dab0f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  musclePrefab: {fileID: 9033597652861972573, guid: 44ac49e300bdeac4b87b4ea027baa0bc, type: 3}
+  bonePrefab: {fileID: 0}
+  initialBoneWidth: 0
 --- !u!1 &2829290049761754084
 GameObject:
   m_ObjectHideFlags: 0
@@ -270,9 +317,10 @@ GameObject:
   - component: {fileID: 2213438781450176251}
   - component: {fileID: 8857498231137487627}
   - component: {fileID: 3789605132529991914}
+  - component: {fileID: 6468517264200644524}
   m_Layer: 3
   m_Name: Lower Leg 2
-  m_TagString: Player
+  m_TagString: Leg
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -337,7 +385,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.9528302, g: 0.91237986, b: 0.91237986, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -446,6 +494,26 @@ HingeJoint2D:
   m_AngleLimits:
     m_LowerAngle: -90
     m_UpperAngle: 90
+--- !u!114 &6468517264200644524
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2829290049761754084}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c094fb3bd33cf34458a141cd56c4e0d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bestGenes:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
 --- !u!1 &3662539461499495052
 GameObject:
   m_ObjectHideFlags: 0
@@ -461,7 +529,7 @@ GameObject:
   - component: {fileID: 2334641868103200039}
   m_Layer: 3
   m_Name: Upper Leg 2
-  m_TagString: Player
+  m_TagString: Leg
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -526,7 +594,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.9528302, g: 0.91237986, b: 0.91237986, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -667,6 +735,37 @@ Transform:
   - {fileID: 5464887635150757198}
   - {fileID: 4824849015435741595}
   - {fileID: 2001234991162273557}
+  m_Father: {fileID: 1276919741707514963}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &4748536614513019097
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 375846499074536335}
+  m_Layer: 0
+  m_Name: topJoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 4422084297763085224, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &375846499074536335
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4748536614513019097}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.37, z: -0.0046489267}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
   m_Father: {fileID: 1276919741707514963}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5768428904089508529
@@ -858,7 +957,7 @@ GameObject:
   - component: {fileID: 3840088119925833854}
   m_Layer: 3
   m_Name: 'Lower Leg '
-  m_TagString: Player
+  m_TagString: Leg
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -923,7 +1022,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.9528302, g: 0.91237986, b: 0.91237986, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -1134,7 +1233,7 @@ GameObject:
   - component: {fileID: 6410569545515105439}
   m_Layer: 3
   m_Name: Upper Leg
-  m_TagString: Player
+  m_TagString: Leg
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1199,7 +1298,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.9528302, g: 0.91237986, b: 0.91237986, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
