@@ -1,0 +1,29 @@
+{
+    "Walking": {
+        "checkpoints": [
+            {
+                "steps": 322461,
+                "file_path": "results\\physics8\\Walking\\Walking-322461.onnx",
+                "reward": 77.55453814400568,
+                "creation_time": 1769362535.9036798,
+                "auxillary_file_paths": [
+                    "results\\physics8\\Walking\\Walking-322461.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 322461,
+            "file_path": "results\\physics8\\Walking.onnx",
+            "reward": 77.55453814400568,
+            "creation_time": 1769362535.9036798,
+            "auxillary_file_paths": [
+                "results\\physics8\\Walking\\Walking-322461.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.2.0.dev0",
+        "torch_version": "2.2.2+cu121"
+    }
+}

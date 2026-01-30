@@ -1,0 +1,38 @@
+{
+    "Walking": {
+        "checkpoints": [
+            {
+                "steps": 499963,
+                "file_path": "results\\TrigTest\\Walking\\Walking-499963.onnx",
+                "reward": 10.729354690760374,
+                "creation_time": 1769462194.4184508,
+                "auxillary_file_paths": [
+                    "results\\TrigTest\\Walking\\Walking-499963.pt"
+                ]
+            },
+            {
+                "steps": 500027,
+                "file_path": "results\\TrigTest\\Walking\\Walking-500027.onnx",
+                "reward": 10.729354690760374,
+                "creation_time": 1769462194.532254,
+                "auxillary_file_paths": [
+                    "results\\TrigTest\\Walking\\Walking-500027.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 500027,
+            "file_path": "results\\TrigTest\\Walking.onnx",
+            "reward": 10.729354690760374,
+            "creation_time": 1769462194.532254,
+            "auxillary_file_paths": [
+                "results\\TrigTest\\Walking\\Walking-500027.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.2.0.dev0",
+        "torch_version": "2.2.2+cu121"
+    }
+}
