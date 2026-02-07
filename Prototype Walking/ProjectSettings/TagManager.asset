@@ -8,6 +8,7 @@ TagManager:
   - Goal
   - Wall
   - Leg
+  - LowerLeg
   layers:
   - Default
   - TransparentFX
