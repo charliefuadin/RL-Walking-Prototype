@@ -93,7 +93,9 @@ public class AgentVisualizations : MonoBehaviour
 
     public void SetBodyBones(Transform limbTransform, Rigidbody2D limbRb, float boneGenome)
     {
-
+        ///<summary>
+        ///Show and visualize bone stress, size, and density
+        /// </summary>
     }
 
 }

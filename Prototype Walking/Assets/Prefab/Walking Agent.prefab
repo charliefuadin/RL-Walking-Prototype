@@ -38,8 +38,8 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4388182875372476567}
-  - {fileID: 6388903940767003722}
   - {fileID: 4846972414774822514}
+  - {fileID: 6388903940767003722}
   - {fileID: 4359887053968072570}
   - {fileID: 6735886870099498989}
   - {fileID: 375846499074536335}
@@ -185,7 +185,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 0a52a65a2418f9a4fbbe75a82e922c65, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: e2777bd682422394f8085d61eb73b895, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: Walking
@@ -218,7 +218,8 @@ MonoBehaviour:
     joint: {fileID: 6410569545515105439}
     energyAccumalation: 0
     maxMotorForce: 0
-    limbLength: 0
+    baseMassLimb: 0
+    centerInertia: 0
   - gameObject: {fileID: 7455875349467764119}
     transform: {fileID: 4846972414774822514}
     rb: {fileID: 4189937764995241318}
@@ -226,7 +227,8 @@ MonoBehaviour:
     joint: {fileID: 3840088119925833854}
     energyAccumalation: 0
     maxMotorForce: 0
-    limbLength: 0
+    baseMassLimb: 0
+    centerInertia: 0
   - gameObject: {fileID: 3662539461499495052}
     transform: {fileID: 6388903940767003722}
     rb: {fileID: 3034473613851024342}
@@ -234,7 +236,8 @@ MonoBehaviour:
     joint: {fileID: 2334641868103200039}
     energyAccumalation: 0
     maxMotorForce: 0
-    limbLength: 0
+    baseMassLimb: 0
+    centerInertia: 0
   - gameObject: {fileID: 2829290049761754084}
     transform: {fileID: 4359887053968072570}
     rb: {fileID: 8857498231137487627}
@@ -242,10 +245,12 @@ MonoBehaviour:
     joint: {fileID: 3789605132529991914}
     energyAccumalation: 0
     maxMotorForce: 0
-    limbLength: 0
-  motorSpeed: 300
+    baseMassLimb: 0
+    centerInertia: 0
+  targetVelocity: 100
+  baseAccelerationTime: 0.85
   maxTorque: 100
-  strengthMultiplier: 20
+  strengthMultiplier: 220
   topJoint: {fileID: 375846499074536335}
   forwardScale: 1
   smoothTimeConstant: 0.25
@@ -255,10 +260,9 @@ MonoBehaviour:
   groundTouchHeight: 8.6
   currentEpisode: 0
   cumalitiveReward: 0
-  evolution: {fileID: 0}
   dna: {fileID: 0}
+  evolution: {fileID: 0}
   cumalitiveEnergy: 0
-  yourSelf: {fileID: 1034900625953073}
   liveState: 1
 --- !u!114 &6240598253857265822
 MonoBehaviour:
@@ -483,7 +487,7 @@ HingeJoint2D:
   m_BreakTorque: Infinity
   m_BreakAction: 3
   m_AutoConfigureConnectedAnchor: 0
-  m_Anchor: {x: -0.00000014901161, y: 0.59000015}
+  m_Anchor: {x: -0.000000029802322, y: 0.60000026}
   m_ConnectedAnchor: {x: -0.000000029802322, y: -0.43999982}
   m_UseConnectedAnchor: 1
   m_UseMotor: 1
@@ -514,6 +518,9 @@ MonoBehaviour:
   - 0
   - 0
   - 0
+  environmentObject: {fileID: 0}
+  spawnAmount: 0
+  verticalSpacing: 0
 --- !u!1 &3662539461499495052
 GameObject:
   m_ObjectHideFlags: 0
@@ -692,8 +699,8 @@ HingeJoint2D:
   m_BreakTorque: Infinity
   m_BreakAction: 3
   m_AutoConfigureConnectedAnchor: 0
-  m_Anchor: {x: -0.016394056, y: 0.66850984}
-  m_ConnectedAnchor: {x: -0.0031148707, y: -0.36574507}
+  m_Anchor: {x: -0.016394056, y: 0.5900002}
+  m_ConnectedAnchor: {x: -0.0031148707, y: -0.40499988}
   m_UseConnectedAnchor: 1
   m_UseMotor: 1
   m_Motor:
@@ -1120,7 +1127,7 @@ HingeJoint2D:
   m_BreakTorque: Infinity
   m_BreakAction: 3
   m_AutoConfigureConnectedAnchor: 0
-  m_Anchor: {x: -0.00000014901161, y: 0.59000015}
+  m_Anchor: {x: -0.000000029802322, y: 0.60000026}
   m_ConnectedAnchor: {x: -0.000000029802322, y: -0.43999982}
   m_UseConnectedAnchor: 1
   m_UseMotor: 1
@@ -1396,8 +1403,8 @@ HingeJoint2D:
   m_BreakTorque: Infinity
   m_BreakAction: 3
   m_AutoConfigureConnectedAnchor: 0
-  m_Anchor: {x: -0.016394056, y: 0.66850984}
-  m_ConnectedAnchor: {x: -0.0031148707, y: -0.36574507}
+  m_Anchor: {x: -0.016394056, y: 0.5900002}
+  m_ConnectedAnchor: {x: -0.0031148707, y: -0.40499988}
   m_UseConnectedAnchor: 1
   m_UseMotor: 1
   m_Motor:

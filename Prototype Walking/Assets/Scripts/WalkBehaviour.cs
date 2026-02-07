@@ -2,6 +2,7 @@
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
+using UnityEngine.UIElements;
 public class WalkBehaviour : Agent
 {
     #region Limb Class
@@ -16,11 +17,9 @@ public class WalkBehaviour : Agent
         public AgentVisualizations.Muscle[] agentMuscles = new AgentVisualizations.Muscle[2];
 
         public float energyAccumalation;
-
-
         public float maxMotorForce;
-
-        public float limbLength;
+        public float baseMassLimb;
+        public float centerInertia;
     }
     public Limb[] limbs;
     #endregion
@@ -31,10 +30,13 @@ public class WalkBehaviour : Agent
     private Color normalColor;
 
     [Header("Physics varaibles")]
-    [SerializeField] private float motorSpeed;
+    [SerializeField] private float targetVelocity;
+    [SerializeField] private float baseAccelerationTime;
+    private float accelerationTime;// seconds to targetVelocity
     [SerializeField] private float maxTorque;
     [SerializeField] private float strengthMultiplier;
     [SerializeField] private Transform topJoint;
+
     private Rigidbody2D rb2D;
 
     [Header("ML Rewards")]
@@ -56,12 +58,14 @@ public class WalkBehaviour : Agent
     [Header("ML Actions")]
     private ActionSegment<int> currentActions;
 
-    [Header("Evolution Component")]
-    [SerializeField] private Evolution evolution;
+
 
     [Header("Evolution Component")]
     [SerializeField] private Dna dna;
+    [SerializeField] private Evolution evolution;
     [SerializeField] private float cumalitiveEnergy;
+    private float baseAgentScale; //For the square cube law
+    private float baseAgentMass;
     private AgentVisualizations agentVisual;
     public bool liveState = true;
 
@@ -95,122 +99,162 @@ public class WalkBehaviour : Agent
         //Debug.Log(groundTouchHeight);
         maxReferenceHeight = transform.localPosition.y + groundTouchHeight;
 
+        accelerationTime = baseAccelerationTime;
+        baseAgentScale = transform.localScale.x;
+        baseAgentMass = rb2D.mass;
+
         Debug.Log("Reference Height: " + maxReferenceHeight);
 
         foreach (var limb in limbs)
         {
-            limb.limbLength = LimbLength(limb.transform);
-            limb.maxMotorForce = MaxMotorForce(limb.limbLength, limb.rb.mass, strengthMultiplier);
             agentVisual.SetBodyMuscles(limb.transform, 3, limb.agentMuscles);
+            limb.baseMassLimb = limb.rb.mass;
+            limb.centerInertia = limb.rb.inertia;
+            Debug.Log("centerInertia " + limb.centerInertia);
         }
-
-        //transform.localScale = new Vector3(Dna.weight / 50f, Dna.weight / 50f, 1f);
     }
 
     public override void OnEpisodeBegin()
     {
-
         currentEpisode++;
         cumalitiveReward = 0f;
-
-
-
-        ResetScene();
-
+        ResetAgent();
+        foreach (var limb in limbs)
+        {
+            ResetLimbs(limb);
+        }
         //On begin for evolutionary purposes in case of changes in rb
 
     }
-    //If needed add mathf.sin(angle) to be more specific on what torque we need based on the angle of the leg
-    //but maxmotor force would be inside of fixedupdate and not on reset
-
-    private float MaxMotorForce(float limbLength, float limbMass, float strengthMultiplier)
+    private void SquareCubeLaw(float newMass, float baseMass) //Seperate Limb later so same assignment doesnt happene multiple times
     {
-        float gravity = Mathf.Abs(Physics2D.gravity.y) * rb2D.gravityScale;
+        float scale = transform.localScale.x / baseAgentScale;
+        accelerationTime = baseAccelerationTime * Mathf.Pow(scale, 2);
 
-        //τorque = m⋅g⋅r⋅sin(θ)
-        float maxMotorForce = (limbMass * gravity * limbLength * strengthMultiplier);
-        maxMotorForce = Mathf.Clamp(maxMotorForce, 0f, maxTorque);
-        return maxMotorForce;
+        newMass = baseMass * Mathf.Pow(scale, 3);
+       
     }
 
-    //Make sure to know whether this on initialize or not
-    //We dont know if a specific length is gonna change or proportionally full body change during evolution
-    private float LimbLength(Transform limb)
+    private void GetNewInertia(Limb limb)
+    {
+        float distance = Vector2.Distance(limb.joint.anchor, limb.rb.centerOfMass);
+        float newInertia = limb.centerInertia + (limb.rb.mass * Mathf.Pow(distance, 2));
+        //I = Icm + md^2
+
+        limb.rb.inertia = newInertia;
+        Debug.Log("newInertia "+limb.rb.inertia);
+    }
+
+    
+    private float MinimumMotorForce(Limb limb, float targetVelocity)
+    {
+        GetNewInertia(limb);
+        float intertia = limb.rb.inertia;
+        float angularAcceleration = targetVelocity / accelerationTime;
+        //This value is still an approximation
+        //Value for wanted movement should be based off reference
+
+        float torque = angularAcceleration * intertia;
+        float minimumForce = torque / LimbLength(limb);// F = t/radius*sin
+
+        Debug.Log("minimumForce " + minimumForce);
+        return minimumForce;
+    }
+
+    private float LimbLength(Limb limb)
     {
         Vector2 jointPos = topJoint.position;
-        Vector2 limbPos = limb.position;
-
+        Vector2 limbPos = limb.transform.position;
         float limblength = Vector2.Distance(limbPos, jointPos);
-        return limblength;
+        if (limb.gameObject.CompareTag("LowerLeg"))
+        {
+            limblength -= 0.5f;
+        }
+        else
+        {
+            limblength +=0.5f;
+        }
+            return limblength;
     }
 
-    private void ResetScene()
+    private void ResetAgent()
     {
+        //Transform reset
+        transform.localPosition = new Vector2(-20, -7.5f);
+        Vector3 eulerAngles = transform.localEulerAngles;
+        eulerAngles.z = Random.Range(0, 0);
+        transform.localEulerAngles = eulerAngles;
+
+        //Physics reset
+        SquareCubeLaw(rb2D.mass, baseAgentMass);
         rb2D.linearVelocity = Vector2.zero;
         rb2D.angularVelocity = 0f;
 
-        transform.localPosition = new Vector2(-20, -7.5f);
-        transform.localRotation = Quaternion.identity;
-
-        foreach (var limb in limbs)
-        {
-            //Transform reset
-            Vector3 eulerAngles = limb.transform.localEulerAngles;
-            eulerAngles.z = Random.Range(-5f, 5f);
-            limb.transform.localEulerAngles = eulerAngles;
-
-            //Motor Reset
-            JointMotor2D motor = limb.joint.motor;
-            motor.motorSpeed = 0;
-            limb.joint.motor = motor;
-
-            limb.rb.linearVelocity = Vector2.zero;
-            limb.rb.angularVelocity = 0f;
-
-            limb.limbLength = LimbLength(limb.transform);
-            limb.maxMotorForce = MaxMotorForce(limb.limbLength, limb.rb.mass, strengthMultiplier);
-
-            //Muscle Redefine
-            agentVisual.DefineBodyMuscles(limb.transform, limb.agentMuscles, 4);
-
-        }
+        //Fitness reset
         Debug.Log("cumalitiveEnergy: " + cumalitiveEnergy);
         cumalitiveEnergy = 0;
+    }
 
+    private void ResetLimbs(Limb limb)
+    {
+        //Transform reset
+        Vector3 eulerAnglesLimb = limb.transform.localEulerAngles;
+        eulerAnglesLimb.z = Random.Range(-5f, 5f);
+        limb.transform.localEulerAngles = eulerAnglesLimb;
+
+        //Motor Reset
+        JointMotor2D motor = limb.joint.motor;
+        motor.motorSpeed = 0;
+        limb.joint.motor = motor;
+
+        //Physics reset
+        limb.rb.linearVelocity = Vector2.zero;
+        limb.rb.angularVelocity = 0f;
+        SquareCubeLaw(limb.rb.mass, limb.baseMassLimb);
+        limb.maxMotorForce = MinimumMotorForce(limb, targetVelocity);
+
+        //Muscle redefine
+        agentVisual.DefineBodyMuscles(limb.transform, limb.agentMuscles, 4);
     }
     #endregion
 
     #region Observations
+    //Test with Min-Max Scaling later
     public override void CollectObservations(VectorSensor sensor)
     {
+
         //Rotation & Position of overall Agent
-        float positionNormalizedX = transform.localPosition.x / 21f;
-        float positionNormalizedY = transform.localPosition.y / 10f;
+        float positionNormalizedX = transform.localPosition.x / 21f;// normalize with SCALE AND FLOOR later DO NOT FORGET
+        float positionNormalizedY = transform.localPosition.y / 10f;// normalize with SCALE later DO NOT FORGET
 
         //Per Limb
         foreach (var limb in limbs)
         {
             float limbRotationNormalized = (limb.transform.localRotation.eulerAngles.z / 360f) * 2f - 1f;
-            sensor.AddObservation(limbRotationNormalized); //try using cosine and sine and check changes later
+            sensor.AddObservation(limbRotationNormalized); 
 
             float limbAngularVelocityNormalized = limb.rb.angularVelocity / 360f;
             sensor.AddObservation(limbAngularVelocityNormalized);
         }
 
         //Velocities Check
-        sensor.AddObservation(rb2D.linearVelocityX / 6f); // scale / normalize as needed
+        sensor.AddObservation(rb2D.linearVelocityX / 6f); // normalize based on ABSOLUTE VELOCITY with Min-Max Scaling
         sensor.AddObservation(rb2D.linearVelocityY / 6f);
 
         sensor.AddObservation(positionNormalizedX);
         sensor.AddObservation(positionNormalizedY);
 
+        //We have to add an observation about size and mass seems like
+        //Tested pretrained model's reaction to a different size and mass ratio and couldnt walk the same
+        //Test later what we also have to add as an observation
     }
 
     public void GoalReached()
     {
-        AddReward(6.0f);
+        AddReward(3.0f);
         cumalitiveReward = GetCumulativeReward();
-        gameObject.SetActive(false);
+        EndEpisode();
+        //gameObject.SetActive(false);
 
     }
 
@@ -274,8 +318,7 @@ public class WalkBehaviour : Agent
 
     private void CalculateCurrentEnergy(Limb limb)
     {
-        float currentAngleRadians = limb.joint.jointAngle * Mathf.Deg2Rad;
-        float currentTorque = MaxMotorForce(limb.limbLength, limb.rb.mass, Mathf.Sin(currentAngleRadians));
+        float currentTorque = limb.joint.GetReactionTorque(Time.fixedDeltaTime); 
         float velocity = limb.rb.angularVelocity * Mathf.Deg2Rad;
         // Power * Time = Joules
         float energyJoules = Mathf.Abs(currentTorque * velocity) * Time.fixedDeltaTime;
@@ -291,9 +334,9 @@ public class WalkBehaviour : Agent
         {
             MoveAgent(currentActions);
         }
+
         //find a way to set this after the height check is achieved
         VelocityReward();
-
         foreach (var limb in limbs)
         {
             agentVisual.BodyMuscleActivation(limb.agentMuscles, limb.rb);
@@ -303,26 +346,25 @@ public class WalkBehaviour : Agent
         {
 
         }
-
     }
 
     //Called in FixedUpdate for physics changes
     private void MoveAgent(ActionSegment<int> act)
     {
-        //show muscle activation by gradient normalized based on rotational velocity
+        //Later try continous actions on speed only specifically
         int actionIndex = 0;
         foreach (var limb in limbs)
         {
             JointMotor2D motor = limb.joint.motor;
-            motor.maxMotorTorque = limb.maxMotorForce;
             var action = act[actionIndex];
+            motor.maxMotorTorque = limb.maxMotorForce;
             switch (action)
             {
                 case 1:
-                    motor.motorSpeed = motorSpeed;
+                    motor.motorSpeed = targetVelocity;
                     break;
                 case 2:
-                    motor.motorSpeed = -motorSpeed;
+                    motor.motorSpeed = -targetVelocity;
                     break;
                 case 3:
                     motor.motorSpeed = 0;
@@ -333,7 +375,6 @@ public class WalkBehaviour : Agent
 
             }
             bool isActive = Mathf.Abs(motor.motorSpeed) > 0f;
-
             foreach (var muscle in limb.agentMuscles)
             {
                 muscle.muscleActivated = isActive;

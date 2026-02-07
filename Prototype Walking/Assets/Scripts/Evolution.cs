@@ -58,11 +58,13 @@ public class Evolution : MonoBehaviour
     //Kamal make sure you set the values in the inspector
     private void InitializeEnvironment()
     {
+        environments = new Environment[spawnAmount];
         GameObject environment;
         Vector3 currentPosition = new Vector3(0, 4, 0);
         for (int i = 0; i < spawnAmount; i++)
         {
             environment = Instantiate(environmentObject, currentPosition, Quaternion.identity);
+            environments[i] = new Environment(environmentObject);
             currentPosition.y += verticalSpacing;
         }
     }
@@ -98,7 +100,7 @@ public class Evolution : MonoBehaviour
     }
 
 
-    // MAKE SURE: THIS IS CALLED AFTER ALL THE ONES IN SIDE THE ENVIRONMNET IS IN DEATH STATE
+    // MAKE SURE: THIS IS CALLED AFTER ALL THE ONES INSIDE THE ENVIRONMNET IS IN DEATH STATE
     private float AveragedOutFitness(Environment environment)
     {
         float cumalitiveFitness = 0f;
