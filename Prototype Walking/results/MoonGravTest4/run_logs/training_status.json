@@ -1,0 +1,29 @@
+{
+    "Walking": {
+        "checkpoints": [
+            {
+                "steps": 259625,
+                "file_path": "results\\MoonGravTest4\\Walking\\Walking-259625.onnx",
+                "reward": null,
+                "creation_time": 1774288739.278061,
+                "auxillary_file_paths": [
+                    "results\\MoonGravTest4\\Walking\\Walking-259625.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 259625,
+            "file_path": "results\\MoonGravTest4\\Walking.onnx",
+            "reward": null,
+            "creation_time": 1774288739.278061,
+            "auxillary_file_paths": [
+                "results\\MoonGravTest4\\Walking\\Walking-259625.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.2.0.dev0",
+        "torch_version": "2.2.2+cu121"
+    }
+}

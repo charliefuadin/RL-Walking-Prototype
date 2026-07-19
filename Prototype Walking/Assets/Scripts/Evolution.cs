@@ -1,113 +1,228 @@
 using JetBrains.Annotations;
+using NUnit;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Unity.MLAgents;
 using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.U2D.IK;
 using Random = UnityEngine.Random;
+using System.Linq;
+using UnityEngine.UIElements;
 
 
-public enum Genome
-{
-    //add basic attributes here if you want more variables
-    //some of these affect eachother
-    stamina, // Index = 0
-    bone, // Index = 1
-    muscle, // Index = 2
-    size,  //Special Variable // Index = 3
-    organEfficiency, // Index = 6
-    limbLength
-
-}
 
 public class Environment
 {
-    public GameObject environment;
-    public Dna[] agentsDna;
-    public float[] geneValue = new float[Enum.GetValues(typeof(Genome)).Length];
 
+    public GameObject environment;
+    public WalkBehaviour[] agentsWalkScripts;
     public float[] agentFitnessList;
+    public float[] traits;
+    
     public Environment(GameObject environment)
     {
         this.environment = environment;
-        this.agentsDna = environment.GetComponentsInChildren<Dna>();
+        this.agentsWalkScripts = environment.GetComponentsInChildren<WalkBehaviour>();
+        this.agentFitnessList = new float[agentsWalkScripts.Length];
+        //Initializes the genome values to start off with.
+        
+      
+            traits = agentsWalkScripts[0].genome;
+            for (int i = 0; i < traits.Length; i++)
+            {
+                float percent = Random.Range(-0.05f, 0.05f);
+                traits[i] *= 1f + percent; //Adds a random percentage to the initial genome values to create some variation in the first generation.
+            }
+            foreach (var walkScript in agentsWalkScripts)
+            {
+                walkScript.genome = traits;
+            }
+        
 
-        this.agentFitnessList = new float[agentsDna.Length];
-
-        for (int i = 0; i < geneValue.Length; i++)
+    }
+    public void mutation(float mutationRate)
+    {
+        //mutates the genome values by a radnom percentage in the range of the mutation rate.
+        foreach (var walkScript in agentsWalkScripts)
         {
-            this.geneValue[i] = Random.Range(1, 8);
+            for (int i = 0; i < walkScript.genome.Length; i++)
+            {
+                float percent = Random.Range(-mutationRate, mutationRate);
+                walkScript.genome[i] *= 1f + percent;
+            }
         }
     }
 }
 
 public class Evolution : MonoBehaviour
 {
-    [Header("Genetic Componenets")]
-    public float[] bestGenes = new float[7];
-    private float bestScore = 0f;
+    [Header("Gravity Components")]
+    [SerializeField] private float gravityLevel;
+    [Header("Mutation Componenets")]
+    public float mutationRate; //How much the genes will change during mutation
+    [SerializeField] private float stopThreshold; //The fitness score at which the algorithm will stop
+    private float previousCost;
+    private List<float> Scores = new List<float>();
 
-    [Header("EnvironmentComponents")]
+    [Header("Environment Components")]
     [SerializeField] private GameObject environmentObject;
-    [SerializeField] private int spawnAmount;
+    [SerializeField] private GameObject agentObject;
+    [SerializeField] private int environmentAmount;
+    [SerializeField] private int agentsAmount;
     [SerializeField] private float verticalSpacing;
     private Environment[] environments;
+    
+    [Header("CrossOver Componenets")]
+    private int Count;
+    [SerializeField] private GameObject[] Agents;
+    [SerializeField] private int iterationRate; //How much the genes will change during mutation
 
-    //Kamal make sure you set the values in the inspector
+
+
+    void Awake()
+    {
+        InitializeEnvironment();
+        Count = 0;
+         // Initial mutation rate, can be adjusted based on experimentation
+        Agents = GameObject.FindGameObjectsWithTag("Player");
+        Physics2D.gravity = new Vector2(0, gravityLevel);
+    }
     private void InitializeEnvironment()
     {
-        environments = new Environment[spawnAmount];
+        environments = new Environment[environmentAmount];
         GameObject environment;
         Vector3 currentPosition = new Vector3(0, 4, 0);
-        for (int i = 0; i < spawnAmount; i++)
+       // Adjust the spacing between agents as needed
+
+        for (int i = 0; i < environmentAmount; i++)
         {
             environment = Instantiate(environmentObject, currentPosition, Quaternion.identity);
-            environments[i] = new Environment(environmentObject);
+            for (int j = 0; j < agentsAmount; j++)
+            {
+                // Adjust the spacing between agents as needed
+                
+                Instantiate(agentObject, currentPosition, Quaternion.identity,environment.transform);
+            }
+            environments[i] = new Environment(environment);
+            
             currentPosition.y += verticalSpacing;
         }
     }
+ 
+    #region gradient descent
+    private void gradientDescent(List<float> scores)
+    { 
+        float[] currentScores = new float[iterationRate];
+        float currentCost = 0f;
 
-    private void Start()
-    {
-        InitializeEnvironment();
-    }
-
-  
-    //Called every environment has done AvergedOutFitness
-    public float[] NewGeneSelection(float newFitness, float[] genes)
-    {
-        Debug.Log("New Best Score Found");
-        float fitnessScore = 1 * (newFitness - bestScore);
-        foreach (var environment in environments)
+        for (int i = 1; i <= currentScores.Length; i++)
         {
-            for (int i = 0; i < bestGenes.Length; i++)
+            currentScores[i - 1] = scores[scores.Count - i]; 
+        }                                                   
+        currentCost = costFunction(currentScores);
+        if (previousCost != 0)
+        {
+            mutationRate = mutationRate * (currentCost/ previousCost); // Adjust the mutation rate based on the cost function
+        }
+        previousCost = currentCost;
+        Debug.Log("currentCost: " + currentCost);
+        Debug.Log(" Mutation Rate: " + mutationRate);
+    }
+    private float costFunction(float[] currentScores)
+    {
+        //Calculate the cost based on the fitness scores of the agents in the environment.
+        float cost = 0f;
+        for (int i = 0; i < currentScores.Length-1; i++)
+        {
+            cost += currentScores[i]; // Give more weight to recent scores
+        }
+        return cost / currentScores.Length;
+    }
+    #endregion
+
+
+
+    #region evolutionary algorithm
+    //If you make count active 
+    public void checkActive(int currentEpisode)
+    { 
+        Count++;
+        if (Count == Agents.Length)
+        {
+            crossOver(bestFittness());
+            if (currentEpisode % iterationRate == 0)
             {
-                fitnessScore += Math.Abs(genes[i] - bestGenes[i]);
+                gradientDescent(Scores);
             }
-
-            if (fitnessScore > bestScore)
+            foreach (var env in environments)
             {
-
-                bestGenes = genes;
-                bestScore = fitnessScore;
+                env.mutation(mutationRate);
+                foreach (var walkScript in env.agentsWalkScripts)
+                {
+                    walkScript.EndEpisode();
+                }
+            }
+            Count = 0;
+        }
+    }
+    
+    //Step 3
+    private void crossOver(Environment[] bestEnvironments)
+    {  
+        foreach(var env in environments)
+        {
+            foreach(var walkScript in env.agentsWalkScripts)
+            {
+                for (int i = 0; i < walkScript.genome.Length; i++)
+                {
+                    walkScript.genome[i] = (bestEnvironments[0].traits[i] + bestEnvironments[1].traits[i]) / 2f; // Averages the traits of the two best environments to create a new set of genes for the next generation.// Adds a random percentage to the new genes to create some variation in the next generation.
+                }
             }
         }
-        
-
-        return bestGenes;
     }
+    //Step 2
+    private Environment[] bestFittness()
+    {
+        float best1 = float.MaxValue;
+        float best2 = float.MaxValue;
+        Environment [] bestEnvironments = new Environment[2];
+        for (int i = 0; i < environments.Length; i++)
+        {
+            float fitness = AveragedOutFitness(environments[i]);
+            Debug.Log("fitness: " + fitness);
+            if (fitness < best1)
+            {
+                best2 = best1;
+                best1 = fitness;
 
+                bestEnvironments[1] = bestEnvironments[0];
+                bestEnvironments[0] = environments[i];
+                
 
-    // MAKE SURE: THIS IS CALLED AFTER ALL THE ONES INSIDE THE ENVIRONMNET IS IN DEATH STATE
+            }
+            else if (fitness < best2)
+            {
+                best2 = fitness;
+                bestEnvironments[1] = environments[i];
+            }
+        }   
+        Scores.Add(best1);
+        Scores.Add(best2);
+        return bestEnvironments;
+    }
+    //Step 1
     private float AveragedOutFitness(Environment environment)
     {
         float cumalitiveFitness = 0f;
-        float averagedOutFitness = 0f;
-        for (int i = 0; i < environment.agentsDna.Length; i++)
+        float averagedOutFitness;
+        for (int i = 0; i < environment.agentsWalkScripts.Length; i++)
         {
-            environment.agentFitnessList[i] = environment.agentsDna[i].fitnessScore;
+            environment.agentFitnessList[i] = environment.agentsWalkScripts[i].fitnessScore;
         }
 
         foreach (float fitness in environment.agentFitnessList)
@@ -116,32 +231,9 @@ public class Evolution : MonoBehaviour
         }
         averagedOutFitness = cumalitiveFitness / environment.agentFitnessList.Length;
         return averagedOutFitness;
-       
-    }
-
-
-    
-
-
-    //REMINDER: this mutation code is percent stacking
-    //Speed of growith will be exponential in long enough time
-    //Mutate all environment except the best
-    public void Mutation(float[] bestGenes, float[] geneValue)
-    {
-        /// <summary>
-        /// LOG AND STORE MUTATION EVENTS
-        /// AND GET SEEDS
-        /// BE ABLE TO RE LOG THIS SEED AND MUTATION HISTORY ONTO A SHEET
-        /// KAAMAALALA
-        /// </summary>
-        foreach (Genome attr in Enum.GetValues(typeof(Genome)))
-        {
-            int index = (int)attr;  // convert enum to 0,1,2,3
-            float percent = Random.Range(-0.05f, 0.05f);
-            geneValue[index] = Math.Clamp(geneValue[index] * (1f + percent), 0, 100);
-        }
-
     }
 }
 
+
+#endregion
 

@@ -34,7 +34,7 @@ public class PhysicsTest : MonoBehaviour
     {
         if (Mathf.Abs(testObject.rb.angularVelocity) >= targetVelocity)
         {
-            Debug.Log(Time.time);
+            //Debug.Log(Time.time);
         }
     }
 
@@ -45,7 +45,7 @@ public class PhysicsTest : MonoBehaviour
         //I = Icm + md^2
 
         testObject.rb.inertia = newInertia;
-        Debug.Log("newInertia " + testObject.rb.inertia);
+        //Debug.Log("newInertia " + testObject.rb.inertia);
     }
 
     private float MinimumMotorForce(TestObject testObject, float targetVelocity)
@@ -57,7 +57,7 @@ public class PhysicsTest : MonoBehaviour
         float torque = angularAcceleration * intertia;
         float minimumForce = torque / testObject.transform.localScale.x;// F = t/radius*sin
 
-        Debug.Log("minimumForce " + minimumForce);
+        //Debug.Log("minimumForce " + minimumForce);
         return minimumForce;
     }
 

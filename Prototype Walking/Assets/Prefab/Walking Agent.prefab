@@ -15,7 +15,6 @@ GameObject:
   - component: {fileID: 1332361826024624310}
   - component: {fileID: 1564084047020791249}
   - component: {fileID: 6240598253857265822}
-  - component: {fileID: -2025416545584655442}
   - component: {fileID: 457027610114879376}
   m_Layer: 3
   m_Name: Walking Agent
@@ -176,7 +175,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 12
+    VectorObservationSize: 16
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -209,7 +208,7 @@ MonoBehaviour:
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  MaxStep: 8000
+  MaxStep: 0
   limbs:
   - gameObject: {fileID: 8519415829599129950}
     transform: {fileID: 4388182875372476567}
@@ -247,23 +246,22 @@ MonoBehaviour:
     maxMotorForce: 0
     baseMassLimb: 0
     centerInertia: 0
+  genome: []
   targetVelocity: 100
   baseAccelerationTime: 0.85
-  maxTorque: 100
-  strengthMultiplier: 220
   topJoint: {fileID: 375846499074536335}
-  forwardScale: 1
-  smoothTimeConstant: 0.25
+  smoothTimeConstant: 0.35
   velocityDeadZone: 0.05
-  maxRewardPerStep: 4
   heightRewardWeight: 0.2
   groundTouchHeight: 8.6
+  baseSpawnY: -3
+  floor: {fileID: 0}
   currentEpisode: 0
   cumalitiveReward: 0
-  dna: {fileID: 0}
+  baseHeadMass: 2.5
   evolution: {fileID: 0}
   cumalitiveEnergy: 0
-  liveState: 1
+  fitnessScore: 0
 --- !u!114 &6240598253857265822
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -276,23 +274,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DecisionPeriod: 6
+  DecisionPeriod: 9
   DecisionStep: 0
   TakeActionsBetweenDecisions: 1
---- !u!114 &-2025416545584655442
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1034900625953073}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f7052f681de63fd43955459ab080c2b3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  fitnessScore: 0
-  agentScore: 0
 --- !u!114 &457027610114879376
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -510,17 +494,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c094fb3bd33cf34458a141cd56c4e0d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bestGenes:
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
+  gravityLevel: 0
+  mutationRate: 0
+  stopThreshold: 0
   environmentObject: {fileID: 0}
-  spawnAmount: 0
+  agentObject: {fileID: 0}
+  environmentAmount: 0
+  agentsAmount: 0
   verticalSpacing: 0
+  Agents: []
+  iterationRate: 0
 --- !u!1 &3662539461499495052
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,0 +1,38 @@
+{
+    "Walking": {
+        "checkpoints": [
+            {
+                "steps": 499988,
+                "file_path": "results\\MoonGravTest2\\Walking\\Walking-499988.onnx",
+                "reward": 2.7548745423555374,
+                "creation_time": 1774287633.3429668,
+                "auxillary_file_paths": [
+                    "results\\MoonGravTest2\\Walking\\Walking-499988.pt"
+                ]
+            },
+            {
+                "steps": 518880,
+                "file_path": "results\\MoonGravTest2\\Walking\\Walking-518880.onnx",
+                "reward": null,
+                "creation_time": 1774287660.7151194,
+                "auxillary_file_paths": [
+                    "results\\MoonGravTest2\\Walking\\Walking-518880.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 518880,
+            "file_path": "results\\MoonGravTest2\\Walking.onnx",
+            "reward": null,
+            "creation_time": 1774287660.7151194,
+            "auxillary_file_paths": [
+                "results\\MoonGravTest2\\Walking\\Walking-518880.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.2.0.dev0",
+        "torch_version": "2.2.2+cu121"
+    }
+}

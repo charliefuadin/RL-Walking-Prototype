@@ -5,7 +5,6 @@ public class CameraFollow : MonoBehaviour
 {
     [SerializeField] private GameObject[] agents;
     private Camera agentCamera;
-
     [SerializeField] private float smoothTime; // SMOOTH = 1 IF INFERENCE  OR = 3 IF DEFAULT AND RUNNING
      private Vector3 velocity = Vector3.zero;
     void Start()
@@ -14,7 +13,7 @@ public class CameraFollow : MonoBehaviour
         agents = GameObject.FindGameObjectsWithTag("Player");
     }
 
-    // Update is called once per frame
+    // Update is called once per frame   b   
     void Update()
     {
         CameraAgentFollow(FindFarthestAgent());

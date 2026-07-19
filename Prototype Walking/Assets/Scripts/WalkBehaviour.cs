@@ -2,7 +2,14 @@
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
+using Unity.Mathematics;
+using System.Collections.Generic;
 using UnityEngine.UIElements;
+using Unity.Mathematics.Geometry;
+using Random = UnityEngine.Random;
+
+[System.Serializable]
+
 public class WalkBehaviour : Agent
 {
     #region Limb Class
@@ -23,32 +30,49 @@ public class WalkBehaviour : Agent
     }
     public Limb[] limbs;
     #endregion
-
+    #region Dna class
+    public class Dna
+    {
+        public float size;
+        public float strength;
+        public float headMass;
+        public float limbMass;
+        public float speed;
+        public float density;
+        public float stamina;
+        
+    }
+   
+    
+    
+    public float[] genome;
+    #endregion
     #region Variables
     [Header("Visual Componenets")]
     private SpriteRenderer walkSprite;
     private Color normalColor;
 
+    [Header("Data Exporting")]
+    private StatsRecorder agentStats;
+
     [Header("Physics varaibles")]
     [SerializeField] private float targetVelocity;
-    [SerializeField] private float baseAccelerationTime;
-    private float accelerationTime;// seconds to targetVelocity
-    [SerializeField] private float maxTorque;
-    [SerializeField] private float strengthMultiplier;
+    [SerializeField] private float baseAccelerationTime;// seconds to targetVelocity
     [SerializeField] private Transform topJoint;
 
     private Rigidbody2D rb2D;
 
     [Header("ML Rewards")]
-    [SerializeField] private float forwardScale = 1f;
     [SerializeField] private float smoothTimeConstant = 0.25f;
     [SerializeField] private float velocityDeadZone = 0.05f;
-    [SerializeField] private float maxRewardPerStep;
     private float smoothedSpeed = 0f;
+    private float previousX;
 
     [SerializeField] private float heightRewardWeight;
     [SerializeField] private float groundTouchHeight;
-    private Transform groundEnvironment;
+    [SerializeField] private float baseSpawnY;
+    private float currentSpawnY;
+    [SerializeField] private Transform floor;
     private float maxReferenceHeight;
 
 
@@ -58,16 +82,18 @@ public class WalkBehaviour : Agent
     [Header("ML Actions")]
     private ActionSegment<int> currentActions;
 
-
-
     [Header("Evolution Component")]
-    [SerializeField] private Dna dna;
+    [SerializeField] private float baseHeadMass;
+    private float previousScale;
+    private float maxSizeClamp = 2;
+    private float minSizeClamp = 0.5f;
+
     [SerializeField] private Evolution evolution;
     [SerializeField] private float cumalitiveEnergy;
-    private float baseAgentScale; //For the square cube law
-    private float baseAgentMass;
     private AgentVisualizations agentVisual;
-    public bool liveState = true;
+    private DecisionRequester decisionRequester;
+    public float fitnessScore = 0f;
+    Dna dna = new Dna();
 
     //private Evolution.genome Dna;
     #endregion
@@ -76,64 +102,135 @@ public class WalkBehaviour : Agent
     #region Intializations
     public override void Initialize()
     {
-        Debug.Log("Initialized");
-        rb2D = GetComponent<Rigidbody2D>();
-        walkSprite = GetComponent<SpriteRenderer>();
-        dna = GetComponent<Dna>();
-        agentVisual = GetComponent<AgentVisualizations>();
-        groundEnvironment = GetComponentInParent<Transform>();
-
-        normalColor = walkSprite.color;
-        currentEpisode = 0;
-        cumalitiveReward = 0;
-
-        smoothedSpeed = rb2D.linearVelocityX;
-
-        ////make a calculated ground touch height
-        //float colliderY = transform.localPosition.y - (transform.localScale.y / 2);
-        //Vector2 currentPosition = new Vector2(0, colliderY);
-        //float groundColliderY = groundEnvironment.transform.localPosition.y + (groundEnvironment.transform.localScale.y / 2);
-        //Vector2 groundPosition = new Vector2(0, groundColliderY);
-
-        //groundTouchHeight = Vector2.Distance(currentPosition, groundPosition);
-        //Debug.Log(groundTouchHeight);
-        maxReferenceHeight = transform.localPosition.y + groundTouchHeight;
-
-        accelerationTime = baseAccelerationTime;
-        baseAgentScale = transform.localScale.x;
-        baseAgentMass = rb2D.mass;
-
-        Debug.Log("Reference Height: " + maxReferenceHeight);
+        InitializeReferences();
+        InitializeAgent();
+        InitializeDNA();
 
         foreach (var limb in limbs)
         {
             agentVisual.SetBodyMuscles(limb.transform, 3, limb.agentMuscles);
             limb.baseMassLimb = limb.rb.mass;
             limb.centerInertia = limb.rb.inertia;
-            Debug.Log("centerInertia " + limb.centerInertia);
+        }
+    }
+
+    private void InitializeReferences()
+    {
+        rb2D = GetComponent<Rigidbody2D>();
+        walkSprite = GetComponent<SpriteRenderer>();
+
+        agentVisual = GetComponent<AgentVisualizations>();
+        decisionRequester = GetComponent<DecisionRequester>();
+        agentStats = Academy.Instance.StatsRecorder;
+
+        evolution = GameObject.Find("EvolutionManager").GetComponent<Evolution>();
+        floor = GameObject.Find("Floor").transform;
+    }
+
+    private void InitializeAgent()
+    {
+        normalColor = walkSprite.color;
+        currentEpisode = 0;
+        cumalitiveReward = 0;
+
+        smoothedSpeed = rb2D.linearVelocityX;
+        currentSpawnY = baseSpawnY;
+        rb2D.mass = baseHeadMass;
+
+        previousScale = transform.localScale.x;
+
+        previousX = transform.localPosition.x;
+    }
+
+    private void InitializeDNA()
+    {
+       
+        
+        //Set Physical Traits in Dna for use in evolution and visualization
+        dna.size = transform.localScale.x;
+        dna.strength = baseAccelerationTime;
+        dna.headMass = rb2D.mass; //Look at this one more closely later because of square cube law mix up and having it ot have mass = dna.agnetmass 
+        dna.limbMass = limbs[0].rb.mass; // Assuming all limbs start with the same mass
+        dna.speed = targetVelocity;
+        dna.density = rb2D.mass / (transform.localScale.x * transform.localScale.y);
+        dna.stamina = 1000f; // Placeholder value, can be adjusted based on energy system implementation
+        genome = new float[] { dna.size, dna.headMass, dna.limbMass, dna.strength, dna.speed, dna.density, dna.stamina };
+    }
+
+    private void UpdateDNA()
+    {
+        //DNA Vals that require physical update
+        dna.size = genome[0];
+        
+        dna.headMass = genome[1];
+        dna.limbMass = genome[2];
+        //DNA Vals that don't require physical update
+        dna.strength = genome[3];
+        dna.speed = genome[4];
+        dna.density = genome[5];
+        dna.stamina = genome[6];
+    }
+
+    private void UnFreezeAgents()
+    {
+        rb2D.bodyType = RigidbodyType2D.Dynamic;
+        foreach (var Limb in limbs)
+        {
+            Limb.rb.bodyType = RigidbodyType2D.Dynamic;
         }
     }
 
     public override void OnEpisodeBegin()
     {
+       
+        //UnFreezes Agents limbs and head after check active
+        UnFreezeAgents();
         currentEpisode++;
         cumalitiveReward = 0f;
+        decisionRequester.enabled = true;
+        UpdateDNA();
+        SquareCubeLaw();
+        GetMaxReferenceHeight();
         ResetAgent();
         foreach (var limb in limbs)
         {
             ResetLimbs(limb);
         }
-        //On begin for evolutionary purposes in case of changes in rb
-
     }
-    private void SquareCubeLaw(float newMass, float baseMass) //Seperate Limb later so same assignment doesnt happene multiple times
+
+    private void GetMaxReferenceHeight()
     {
-        float scale = transform.localScale.x / baseAgentScale;
-        accelerationTime = baseAccelerationTime * Mathf.Pow(scale, 2);
+        float totalLimbYValues = 0f;
+        foreach (var limb in limbs)
+        {
+            totalLimbYValues += limb.transform.localScale.y;
+        }
+        float actualLegHeight = totalLimbYValues / 2; // 2 Leg sections
+        float headHeightRadius = transform.localScale.y / 2;
+        float groundColliderYVal = floor.localPosition.y + (floor.localScale.y / 2); // 2 is based by radius
 
-        newMass = baseMass * Mathf.Pow(scale, 3);
-       
+        maxReferenceHeight = groundColliderYVal + actualLegHeight + headHeightRadius;
     }
+    
+    private void SquareCubeLaw()
+    {
+        dna.size = Mathf.Clamp(dna.size, minSizeClamp, maxSizeClamp); // Limit size to a reasonable range to prevent extreme scaling
+        transform.localScale = new Vector3(dna.size, dna.size, 1);
+
+        float scale = dna.size / previousScale;
+        dna.strength = dna.strength * Mathf.Pow(scale, 2);
+        rb2D.mass  = dna.headMass * Mathf.Pow(scale, 3);
+
+        foreach (var limb in limbs)
+        {
+            limb.rb.mass = dna.limbMass * Mathf.Pow(scale, 3);
+        }
+        previousScale = transform.localScale.x;
+
+        dna.headMass = rb2D.mass;
+        dna.limbMass = limbs[0].rb.mass; // Assuming all limbs have the same mass
+    }
+    
 
     private void GetNewInertia(Limb limb)
     {
@@ -142,22 +239,18 @@ public class WalkBehaviour : Agent
         //I = Icm + md^2
 
         limb.rb.inertia = newInertia;
-        Debug.Log("newInertia "+limb.rb.inertia);
     }
 
-    
-    private float MinimumMotorForce(Limb limb, float targetVelocity)
+
+    private float MinimumMotorForce(Limb limb)
     {
         GetNewInertia(limb);
         float intertia = limb.rb.inertia;
-        float angularAcceleration = targetVelocity / accelerationTime;
-        //This value is still an approximation
-        //Value for wanted movement should be based off reference
+        float angularAcceleration = dna.speed/dna.strength; // this value is not exact and should be referenced
 
         float torque = angularAcceleration * intertia;
         float minimumForce = torque / LimbLength(limb);// F = t/radius*sin
 
-        Debug.Log("minimumForce " + minimumForce);
         return minimumForce;
     }
 
@@ -166,32 +259,36 @@ public class WalkBehaviour : Agent
         Vector2 jointPos = topJoint.position;
         Vector2 limbPos = limb.transform.position;
         float limblength = Vector2.Distance(limbPos, jointPos);
+
+        //Lower leg has shorter limblength
+        //Upper leg is carrying shorter leg
         if (limb.gameObject.CompareTag("LowerLeg"))
         {
-            limblength -= 0.5f;
+            limblength /= 2f; 
         }
         else
         {
-            limblength +=0.5f;
+            limblength *= 2f;
         }
-            return limblength;
+        return limblength;
     }
 
     private void ResetAgent()
     {
         //Transform reset
-        transform.localPosition = new Vector2(-20, -7.5f);
+        currentSpawnY = baseSpawnY; // Scales with size
+
+        transform.localPosition = new Vector2(-20, currentSpawnY);
         Vector3 eulerAngles = transform.localEulerAngles;
         eulerAngles.z = Random.Range(0, 0);
         transform.localEulerAngles = eulerAngles;
 
         //Physics reset
-        SquareCubeLaw(rb2D.mass, baseAgentMass);
         rb2D.linearVelocity = Vector2.zero;
         rb2D.angularVelocity = 0f;
 
         //Fitness reset
-        Debug.Log("cumalitiveEnergy: " + cumalitiveEnergy);
+        //Debug.Log("cumalitiveEnergy: " + cumalitiveEnergy);
         cumalitiveEnergy = 0;
     }
 
@@ -210,115 +307,171 @@ public class WalkBehaviour : Agent
         //Physics reset
         limb.rb.linearVelocity = Vector2.zero;
         limb.rb.angularVelocity = 0f;
-        SquareCubeLaw(limb.rb.mass, limb.baseMassLimb);
-        limb.maxMotorForce = MinimumMotorForce(limb, targetVelocity);
+        limb.maxMotorForce = MinimumMotorForce(limb);
 
         //Muscle redefine
         agentVisual.DefineBodyMuscles(limb.transform, limb.agentMuscles, 4);
     }
+    
+    private void AgentDeath()
+    {
+        decisionRequester.enabled = false;
+        DataRecorder();
+        cumalitiveReward = GetCumulativeReward();
+        GetFitness(cumalitiveEnergy); 
+        previousScale = transform.localScale.x;
+        //freeze agent and limbs to prevent further reward gain until reset
+        rb2D.bodyType = RigidbodyType2D.Static;
+        foreach (var Limb in limbs)
+        {
+            Limb.rb.bodyType = RigidbodyType2D.Static;
+        }
+        evolution.checkActive(currentEpisode);
+    }
     #endregion
 
     #region Observations
+    private float AverageLimbLength()
+    {
+        float totalLimbLength = 0f;
+        foreach (var limb in limbs)
+        {
+            totalLimbLength += LimbLength(limb);
+        }
+        float averageLimbLength = totalLimbLength / limbs.Length;
+        return averageLimbLength;
+    }
+
+    private void DataRecorder()
+    {
+        //General Data
+        agentStats.Add("Agent/cumalitiveEnergy", cumalitiveEnergy, StatAggregationMethod.Average);
+        agentStats.Add("Agent/mutationRate", evolution.mutationRate, StatAggregationMethod.Average);
+        agentStats.Add("Agent/Fitness", fitnessScore, StatAggregationMethod.Average);
+
+        //DNA Data
+        agentStats.Add("DNA/Size", dna.size, StatAggregationMethod.Average);
+        agentStats.Add("DNA/HeadMass", dna.headMass, StatAggregationMethod.Average);
+        agentStats.Add("DNA/LimbMass", dna.limbMass, StatAggregationMethod.Average);
+        agentStats.Add("DNA/Strengh", dna.strength, StatAggregationMethod.Average);
+        agentStats.Add("DNA/Speed", dna.speed, StatAggregationMethod.Average);
+    }
+
     //Test with Min-Max Scaling later
     public override void CollectObservations(VectorSensor sensor)
     {
 
         //Rotation & Position of overall Agent
-        float positionNormalizedX = transform.localPosition.x / 21f;// normalize with SCALE AND FLOOR later DO NOT FORGET
-        float positionNormalizedY = transform.localPosition.y / 10f;// normalize with SCALE later DO NOT FORGET
+        float positionNormalizedX = transform.localPosition.x / (floor.localScale.x / 2);// normalize with SCALE AND FLOOR later DO NOT FORGET
+        float positionNormalizedY = transform.localPosition.y / 6f;// normalize with SCALE later DO NOT FORGET
+
+        //Physics of the agent
+        float expectedMaxVelocity = dna.speed * AverageLimbLength();
+        float currentVelocity = Vector2.Dot(rb2D.linearVelocity, transform.right); //Dot to make sure relative forward motion and not worldspace
+        float laterVelocity = Vector2.Dot(rb2D.linearVelocity, transform.up);
+
+        float normalizedVelocity = math.tanh(currentVelocity/expectedMaxVelocity);
+        float normalizedLateralVelocity = math.tanh(laterVelocity / expectedMaxVelocity);
 
         //Per Limb
         foreach (var limb in limbs)
         {
             float limbRotationNormalized = (limb.transform.localRotation.eulerAngles.z / 360f) * 2f - 1f;
-            sensor.AddObservation(limbRotationNormalized); 
+            sensor.AddObservation(limbRotationNormalized);
 
             float limbAngularVelocityNormalized = limb.rb.angularVelocity / 360f;
             sensor.AddObservation(limbAngularVelocityNormalized);
         }
+        
+        //DNA Observations
+        float normalizedSize = dna.size / maxSizeClamp;
+        float sizeScale = maxSizeClamp / dna.size;
+        float maxStrength = baseAccelerationTime * Mathf.Pow(sizeScale, 2);
+        float maxHeadMass = baseHeadMass * Mathf.Pow(sizeScale, 2);
+        float maxLimbMass = limbs[0].baseMassLimb * Mathf.Pow(sizeScale, 2);
 
-        //Velocities Check
-        sensor.AddObservation(rb2D.linearVelocityX / 6f); // normalize based on ABSOLUTE VELOCITY with Min-Max Scaling
-        sensor.AddObservation(rb2D.linearVelocityY / 6f);
+        float normalizedStrength = dna.strength / maxStrength;
+        float normalizedHeadMass = dna.headMass / maxHeadMass;
+        float normalizedLimbMass = dna.limbMass / maxLimbMass;
+
+        sensor.AddObservation(normalizedStrength);
+        sensor.AddObservation(normalizedHeadMass);
+        sensor.AddObservation(normalizedLimbMass);
+        sensor.AddObservation(normalizedSize);
+
+        //Position and Velocities Observations
+        sensor.AddObservation(normalizedVelocity);
+        sensor.AddObservation(normalizedLateralVelocity);
 
         sensor.AddObservation(positionNormalizedX);
         sensor.AddObservation(positionNormalizedY);
 
-        //We have to add an observation about size and mass seems like
-        //Tested pretrained model's reaction to a different size and mass ratio and couldnt walk the same
-        //Test later what we also have to add as an observation
     }
 
-    public void GoalReached()
+    public void GetFitness(float energyAccumlation)
     {
-        AddReward(3.0f);
-        cumalitiveReward = GetCumulativeReward();
-        EndEpisode();
-        //gameObject.SetActive(false);
+        float gravityScale = Mathf.Abs(Physics.gravity.y);
+        float normalizedEnergy = energyAccumlation / gravityScale; //Ranges in hundreds
+        float normalizeCumalitiveReward = cumalitiveReward * (500 / gravityScale); //500 for 50% of real val (500/1000)
+        //**Subtract because higher reward should get us closer to zero
+        float fitness = normalizedEnergy - normalizeCumalitiveReward; 
 
+        fitnessScore = Mathf.Clamp(fitness, 0f, Mathf.Infinity);
     }
 
-    private void VelocityReward()
+    private void MovementReward()
     {
-        float timeStep = Time.fixedDeltaTime;
-        float currentVelocity = rb2D.linearVelocity.x;
+        //Real problem was EMA should be used for bonus and not main reward
 
-        // Compute alpha for exponential moving average (EMA)
-        // Formula: alpha = 1 - exp(-dt / tau)
-        float smoothingFactor = 1f - Mathf.Exp(-timeStep / smoothTimeConstant);
-
-        // Equivalent to EMA: smoothedSpeed = alpha * current + (1-alpha) * previous smoothedspeed`
-        float previousSmoothedSpeed = smoothedSpeed;
-        smoothedSpeed = Mathf.Lerp(previousSmoothedSpeed, rb2D.linearVelocityX, smoothingFactor);
-
-        float usedSpeed;
-        if (Mathf.Abs(smoothedSpeed) > velocityDeadZone)
+        // Progress (main reward efficiency)
+        float deltaX = transform.localPosition.x - previousX;
+        previousX = transform.localPosition.x;
+        if(deltaX > 0f)
         {
-            // Subtract deadzone so tiny velocities don't contribute to reward
-            usedSpeed = Mathf.Sign(smoothedSpeed) * (Mathf.Abs(smoothedSpeed) - velocityDeadZone);
+            AddReward(deltaX * 0.004f);
         }
         else
         {
-            usedSpeed = 0f;
+            AddReward(deltaX * 0.002f);
         }
 
-        float rewardThisStep = usedSpeed * forwardScale * timeStep;
-        rewardThisStep = Mathf.Clamp(rewardThisStep, -maxRewardPerStep, maxRewardPerStep);
+        // EMA momentum bonus (Style for realism)
+        float currentVelocity = rb2D.linearVelocity.x;
+        float timeStep = Time.fixedDeltaTime;
+        float smoothingFactor = 1f - Mathf.Exp(-timeStep / smoothTimeConstant);
+        smoothedSpeed = Mathf.Lerp(smoothedSpeed, currentVelocity, smoothingFactor);
 
-        AddReward(rewardThisStep);
+        if (deltaX > 0f && smoothedSpeed > velocityDeadZone)
+        {
+            float momentum = smoothedSpeed - velocityDeadZone;
+            AddReward(momentum * 0.0005f * Time.fixedDeltaTime);
+        }
     }
 
-    //Height threshold
-    private void HeightCheck()
-    {   //TODO Turn groundtouchheight based on localScale.y 
-        float currenHeight = transform.localPosition.y + groundTouchHeight;
-        float normalizedHeight = currenHeight / maxReferenceHeight; // this is going to be max height later
-
-        float percent = 0.75f; // 75% of standing height
-        float reward = Mathf.Clamp((normalizedHeight - percent), -0.05f, 0.05f);
-
-        AddReward(reward * heightRewardWeight);
+    private void MaxStepReset()
+    {
+        float currentStep = StepCount;
+        if (currentStep > 10000)
+        {
+            AddReward(-1f);
+            AgentDeath();
+        }
     }
-
-
     #endregion
 
     #region Actions
     public override void OnActionReceived(ActionBuffers actions)
     {
+        MaxStepReset();
         currentActions = actions.DiscreteActions;
-        HeightCheck();
-        if (transform.localPosition.y < -groundTouchHeight + 0.1)
-        {
-            AddReward(-3f);
-            EndEpisode();
-        }
+        MovementReward();
+        AddReward(-0.0002f); //Dont make em waste movement
         cumalitiveReward = GetCumulativeReward();
     }
 
     private void CalculateCurrentEnergy(Limb limb)
     {
-        float currentTorque = limb.joint.GetReactionTorque(Time.fixedDeltaTime); 
+        float currentTorque = limb.joint.GetReactionTorque(Time.fixedDeltaTime);
         float velocity = limb.rb.angularVelocity * Mathf.Deg2Rad;
         // Power * Time = Joules
         float energyJoules = Mathf.Abs(currentTorque * velocity) * Time.fixedDeltaTime;
@@ -335,16 +488,10 @@ public class WalkBehaviour : Agent
             MoveAgent(currentActions);
         }
 
-        //find a way to set this after the height check is achieved
-        VelocityReward();
         foreach (var limb in limbs)
         {
             agentVisual.BodyMuscleActivation(limb.agentMuscles, limb.rb);
             CalculateCurrentEnergy(limb);
-        }
-        if (!liveState)
-        {
-
         }
     }
 
@@ -361,10 +508,10 @@ public class WalkBehaviour : Agent
             switch (action)
             {
                 case 1:
-                    motor.motorSpeed = targetVelocity;
+                    motor.motorSpeed = dna.speed;
                     break;
                 case 2:
-                    motor.motorSpeed = -targetVelocity;
+                    motor.motorSpeed = -dna.speed;
                     break;
                 case 3:
                     motor.motorSpeed = 0;
@@ -382,6 +529,15 @@ public class WalkBehaviour : Agent
             limb.joint.motor = motor;
             actionIndex++;
         }
+        
+    }
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Floor"))
+        {
+            AddReward(-3f);
+            AgentDeath();
+        }
     }
     #endregion
 
@@ -391,8 +547,10 @@ public class WalkBehaviour : Agent
     {
         if (collision.gameObject.CompareTag("Goal"))
         {
-            GoalReached();
+            AddReward(3.0f);
+            AgentDeath();
         }
+
     }
     #endregion
 }
